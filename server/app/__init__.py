@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from app.extensions import jwt, init_cors, init_before_request, register_error_handlers
 from app.views import register_blueprints
+from app.config import Config
 
 
 def create_app(config=None):
@@ -12,8 +13,9 @@ def create_app(config=None):
     app = Flask(__name__)
     
     # 配置
-    app.config['JWT_SECRET_KEY'] = 'your-secret-key-change-in-production-2024'
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=8)
+    app.config['JWT_SECRET_KEY'] = Config.JWT_SECRET_KEY
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=Config.JWT_ACCESS_TOKEN_EXPIRES)
+    app.config['DEBUG'] = Config.DEBUG
     
     # 初始化扩展
     init_cors(app)

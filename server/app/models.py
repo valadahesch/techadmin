@@ -2,329 +2,533 @@
 
 from datetime import datetime
 import bcrypt
-import re
+from app.database import db_pool
+from app.config import Config
 
 
 class User:
     """用户模型"""
-    def __init__(self, id, username, email, password_hash, is_active=True):
+    def __init__(self, id, username, email, password_hash, is_active=True, created_at=None):
         self.id = id
         self.username = username
         self.email = email
         self.password_hash = password_hash
         self.is_active = is_active
-        self.created_at = datetime.now()
+        self.created_at = created_at or datetime.now()
 
 
 class Role:
     """角色模型"""
-    def __init__(self, id, name, description, is_builtin=False):
+    def __init__(self, id, name, description, is_builtin=False, created_at=None):
         self.id = id
         self.name = name
         self.description = description
         self.is_builtin = is_builtin
+        self.created_at = created_at or datetime.now()
 
 
 class Permission:
-    """权限模型 - 基于资源操作"""
+    """权限模型"""
     def __init__(self, id, code, name, resource, action, description=None):
         self.id = id
-        self.code = code          # 权限代码，如: user:view, user:create
-        self.name = name          # 权限名称（显示用）
-        self.resource = resource  # 资源类型: user, role, permission, leak, assessment
-        self.action = action      # 操作: view, create, edit, delete, manage, extract
+        self.code = code
+        self.name = name
+        self.resource = resource
+        self.action = action
         self.description = description
 
 
 class AuthDB:
-    """内存数据库操作类"""
+    """数据库操作类"""
     
     def __init__(self):
-        self.users = []
-        self.roles = []
-        self.permissions = []
-        self.user_roles = []
-        self.role_permissions = []
-        self._next_ids = {'user': 1, 'role': 1, 'permission': 1}
-        
-        self._init_data()
+        pass
     
-    def _init_data(self):
-        """初始化基础数据"""
-        # 1. 创建权限（基于资源操作）
-        permissions_data = [
-            # 用户管理权限
-            (1, 'user:view', '查看用户', 'user', 'view', '查看用户列表和详情'),
-            (2, 'user:create', '创建用户', 'user', 'create', '创建新用户'),
-            (3, 'user:edit', '编辑用户', 'user', 'edit', '编辑用户信息'),
-            (4, 'user:delete', '删除用户', 'user', 'delete', '删除用户'),
-            
-            # 角色管理权限
-            (5, 'role:view', '查看角色', 'role', 'view', '查看角色列表'),
-            (6, 'role:manage', '管理角色', 'role', 'manage', '创建/编辑/删除角色，分配权限'),
-            
-            # 权限管理权限
-            (7, 'permission:view', '查看权限', 'permission', 'view', '查看权限列表'),
-            
-            # 漏扫处理权限
-            (8, 'leak:view', '查看漏扫', 'leak', 'view', '查看漏扫页面'),
-            (9, 'leak:extract', '漏扫提取', 'leak', 'extract', '提取漏扫数据'),
-            (10, 'leak:export', '漏扫导出', 'leak', 'export', '导出漏扫数据'),
-            
-            # 测评录入权限
-            (11, 'assessment:view', '查看测评', 'assessment', 'view', '查看测评页面'),
-            (12, 'assessment:manage', '管理测评', 'assessment', 'manage', '管理测评项目和规则'),
-        ]
-        
-        for perm in permissions_data:
-            self.permissions.append(Permission(*perm))
-        self._next_ids['permission'] = 13
-        
-        # 2. 创建角色
-        admin_role = Role(1, 'admin', '系统管理员，拥有所有权限', True)
-        user_role = Role(2, 'user', '普通用户，查看权限', True)
-        guest_role = Role(3, 'guest', '访客，最小权限', True)
-        
-        self.roles = [admin_role, user_role, guest_role]
-        self._next_ids['role'] = 4
-        
-        # 3. 分配角色权限
-        # admin: 所有权限
-        for perm in self.permissions:
-            self.role_permissions.append((1, perm.id))
-        
-        # user: 查看权限
-        user_perms = [1, 5, 7, 8, 11]  # user:view, role:view, permission:view, leak:view, assessment:view
-        for perm_id in user_perms:
-            self.role_permissions.append((2, perm_id))
-        
-        # guest: 只能查看漏扫
-        guest_perms = [8]  # leak:view
-        for perm_id in guest_perms:
-            self.role_permissions.append((3, perm_id))
-        
-        # 4. 创建用户
-        admin_password = bcrypt.hashpw('123456'.encode('utf-8'), bcrypt.gensalt())
-        user_password = bcrypt.hashpw('123456'.encode('utf-8'), bcrypt.gensalt())
-        
-        admin = User(1, 'admin', 'admin@example.com', admin_password, True)
-        normal_user = User(2, 'zhangsan', 'zhangsan@example.com', user_password, True)
-        
-        self.users = [admin, normal_user]
-        self._next_ids['user'] = 3
-        
-        # 5. 分配用户角色
-        self.user_roles.append((1, 1))  # admin -> admin
-        self.user_roles.append((2, 2))  # zhangsan -> user
-    
-    # ========== 用户相关方法 ==========
+    # ==================== 用户相关方法 ====================
     def get_user_by_username(self, username):
-        return next((u for u in self.users if u.username == username), None)
+        """根据用户名获取用户"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT id, username, email, password_hash, is_active, created_at FROM users WHERE username = %s",
+                (username,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return User(
+                    id=row['id'],
+                    username=row['username'],
+                    email=row['email'],
+                    password_hash=row['password_hash'],  # 这是字符串
+                    is_active=bool(row['is_active']),
+                    created_at=row['created_at']
+                )
+        return None
     
     def get_user_by_id(self, user_id):
-        return next((u for u in self.users if u.id == user_id), None)
+        """根据用户ID获取用户"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT id, username, email, password_hash, is_active, created_at FROM users WHERE id = %s",
+                (user_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return User(
+                    id=row['id'],
+                    username=row['username'],
+                    email=row['email'],
+                    password_hash=row['password_hash'],
+                    is_active=bool(row['is_active']),
+                    created_at=row['created_at']
+                )
+        return None
     
     def get_all_users(self):
-        users_data = []
-        for user in self.users:
-            user_roles = self.get_user_roles(user.id)
-            users_data.append({
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'is_active': user.is_active,
-                'roles': user_roles,
-                'created_at': user.created_at.isoformat()
-            })
-        return users_data
+        """获取所有用户"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute("SELECT id, username, email, is_active, created_at FROM users ORDER BY id")
+            rows = cursor.fetchall()
+            
+            users_data = []
+            for row in rows:
+                user_roles = self.get_user_roles(row['id'])
+                users_data.append({
+                    'id': row['id'],
+                    'username': row['username'],
+                    'email': row['email'],
+                    'is_active': bool(row['is_active']),
+                    'roles': user_roles,
+                    'created_at': row['created_at'].isoformat() if row['created_at'] else None
+                })
+            return users_data
     
     def create_user(self, username, email, password):
+        """创建用户"""
         if self.get_user_by_username(username):
             return None
+        
         password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        user_id = self._next_ids['user']
-        self._next_ids['user'] += 1
-        user = User(user_id, username, email, password_hash)
-        self.users.append(user)
-        return user
-    
+        
+        with db_pool.get_cursor() as cursor:
+            # 确保存储的是字符串
+            cursor.execute(
+                "INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s)",
+                (username, email, password_hash.decode('utf-8'))  # 关键：decode 为字符串
+            )
+            user_id = cursor.lastrowid
+            return self.get_user_by_id(user_id)
+
     def update_user(self, user_id, data):
-        user = self.get_user_by_id(user_id)
-        if not user:
-            return None
+        """更新用户"""
+        updates = []
+        params = []
+        
         if 'email' in data:
-            user.email = data['email']
+            updates.append("email = %s")
+            params.append(data['email'])
         if 'is_active' in data:
-            user.is_active = data['is_active']
+            updates.append("is_active = %s")
+            params.append(1 if data['is_active'] else 0)
         if 'password' in data and data['password']:
-            user.password_hash = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
-        return user
+            password_hash = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
+            updates.append("password_hash = %s")
+            params.append(password_hash.decode('utf-8'))  # 关键：decode 为字符串
+        
+        if not updates:
+            return self.get_user_by_id(user_id)
+        
+        params.append(user_id)
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = %s", params)
+            return self.get_user_by_id(user_id)
     
     def delete_user(self, user_id):
-        user = self.get_user_by_id(user_id)
-        if user:
-            self.users.remove(user)
-            self.user_roles = [(u_id, r_id) for u_id, r_id in self.user_roles if u_id != user_id]
-            return True
-        return False
+        """删除用户"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+            return cursor.rowcount > 0
     
     def assign_role_to_user(self, user_id, role_id):
-        if not self.get_user_by_id(user_id) or not self.get_role_by_id(role_id):
-            return False
-        if (user_id, role_id) not in self.user_roles:
-            self.user_roles.append((user_id, role_id))
-        return True
+        """为用户分配角色"""
+        with db_pool.get_cursor() as cursor:
+            try:
+                cursor.execute(
+                    "INSERT INTO user_roles (user_id, role_id) VALUES (%s, %s)",
+                    (user_id, role_id)
+                )
+                return True
+            except:
+                return False
     
     def remove_role_from_user(self, user_id, role_id):
-        self.user_roles = [(u_id, r_id) for u_id, r_id in self.user_roles 
-                          if not (u_id == user_id and r_id == role_id)]
-        return True
+        """移除用户的角色"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(
+                "DELETE FROM user_roles WHERE user_id = %s AND role_id = %s",
+                (user_id, role_id)
+            )
+            return cursor.rowcount > 0
     
     def get_user_roles(self, user_id):
         """获取用户的所有角色ID"""
-        return [r_id for u_id, r_id in self.user_roles if u_id == user_id]
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT role_id FROM user_roles WHERE user_id = %s",
+                (user_id,)
+            )
+            rows = cursor.fetchall()
+            return [row['role_id'] for row in rows]
     
-    # ========== 角色相关方法 ==========
+    def get_user_roles_detail(self, user_id):
+        """获取用户的所有角色详情"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT r.id, r.name, r.description, r.is_builtin
+                FROM roles r
+                JOIN user_roles ur ON r.id = ur.role_id
+                WHERE ur.user_id = %s
+            """, (user_id,))
+            rows = cursor.fetchall()
+            return [{
+                'id': row['id'],
+                'name': row['name'],
+                'description': row['description'],
+                'is_builtin': bool(row['is_builtin'])
+            } for row in rows]
+    
+    # ==================== 角色相关方法 ====================
+    
     def get_role_by_id(self, role_id):
-        return next((r for r in self.roles if r.id == role_id), None)
+        """根据角色ID获取角色"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT id, name, description, is_builtin, created_at FROM roles WHERE id = %s",
+                (role_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return Role(
+                    id=row['id'],
+                    name=row['name'],
+                    description=row['description'],
+                    is_builtin=bool(row['is_builtin']),
+                    created_at=row['created_at']
+                )
+        return None
+    
+    def get_role_by_name(self, name):
+        """根据角色名称获取角色"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT id, name, description, is_builtin, created_at FROM roles WHERE name = %s",
+                (name,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return Role(
+                    id=row['id'],
+                    name=row['name'],
+                    description=row['description'],
+                    is_builtin=bool(row['is_builtin']),
+                    created_at=row['created_at']
+                )
+        return None
     
     def get_all_roles(self):
-        roles_data = []
-        for role in self.roles:
-            role_perms = self.get_role_permissions(role.id)
-            roles_data.append({
-                'id': role.id,
-                'name': role.name,
-                'description': role.description,
-                'is_builtin': role.is_builtin,
-                'permissions': role_perms
-            })
-        return roles_data
+        """获取所有角色"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute("SELECT id, name, description, is_builtin FROM roles ORDER BY id")
+            rows = cursor.fetchall()
+            
+            roles_data = []
+            for row in rows:
+                role_perms = self.get_role_permissions(row['id'])
+                roles_data.append({
+                    'id': row['id'],
+                    'name': row['name'],
+                    'description': row['description'],
+                    'is_builtin': bool(row['is_builtin']),
+                    'permissions': role_perms
+                })
+            return roles_data
     
     def create_role(self, name, description):
-        role_id = self._next_ids['role']
-        self._next_ids['role'] += 1
-        role = Role(role_id, name, description, False)
-        self.roles.append(role)
-        return role
+        """创建角色"""
+        if self.get_role_by_name(name):
+            return None
+        
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO roles (name, description, is_builtin) VALUES (%s, %s, 0)",
+                (name, description)
+            )
+            role_id = cursor.lastrowid
+            return self.get_role_by_id(role_id)
     
     def update_role(self, role_id, data):
-        role = self.get_role_by_id(role_id)
-        if not role:
-            return None
+        """更新角色"""
+        updates = []
+        params = []
+        
         if 'name' in data:
-            role.name = data['name']
+            updates.append("name = %s")
+            params.append(data['name'])
         if 'description' in data:
-            role.description = data['description']
-        return role
+            updates.append("description = %s")
+            params.append(data['description'])
+        
+        if not updates:
+            return self.get_role_by_id(role_id)
+        
+        params.append(role_id)
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(f"UPDATE roles SET {', '.join(updates)} WHERE id = %s", params)
+            return self.get_role_by_id(role_id)
     
     def delete_role(self, role_id):
+        """删除角色"""
         role = self.get_role_by_id(role_id)
-        if role and not role.is_builtin:
-            self.roles.remove(role)
-            self.role_permissions = [(r_id, p_id) for r_id, p_id in self.role_permissions if r_id != role_id]
-            self.user_roles = [(u_id, r_id) for u_id, r_id in self.user_roles if r_id != role_id]
-            return True
-        return False
+        if role and role.is_builtin:
+            return False
+        
+        with db_pool.get_cursor() as cursor:
+            cursor.execute("DELETE FROM roles WHERE id = %s", (role_id,))
+            return cursor.rowcount > 0
     
-    # ========== 权限相关方法 ==========
+    # ==================== 权限相关方法 ====================
+    
     def get_permission_by_id(self, permission_id):
-        return next((p for p in self.permissions if p.id == permission_id), None)
+        """根据权限ID获取权限"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT id, code, name, resource, action, description FROM permissions WHERE id = %s",
+                (permission_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return Permission(
+                    id=row['id'],
+                    code=row['code'],
+                    name=row['name'],
+                    resource=row['resource'],
+                    action=row['action'],
+                    description=row['description']
+                )
+        return None
     
     def get_permission_by_code(self, code):
-        return next((p for p in self.permissions if p.code == code), None)
+        """根据权限代码获取权限"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT id, code, name, resource, action, description FROM permissions WHERE code = %s",
+                (code,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return Permission(
+                    id=row['id'],
+                    code=row['code'],
+                    name=row['name'],
+                    resource=row['resource'],
+                    action=row['action'],
+                    description=row['description']
+                )
+        return None
     
     def get_all_permissions(self):
-        return [{
-            'id': p.id,
-            'code': p.code,
-            'name': p.name,
-            'resource': p.resource,
-            'action': p.action,
-            'description': p.description
-        } for p in self.permissions]
+        """获取所有权限"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute("SELECT id, code, name, resource, action, description FROM permissions ORDER BY id")
+            rows = cursor.fetchall()
+            return [{
+                'id': row['id'],
+                'code': row['code'],
+                'name': row['name'],
+                'resource': row['resource'],
+                'action': row['action'],
+                'description': row['description']
+            } for row in rows]
     
     def assign_permission_to_role(self, role_id, permission_id):
-        if not self.get_role_by_id(role_id) or not self.get_permission_by_id(permission_id):
-            return False
-        if (role_id, permission_id) not in self.role_permissions:
-            self.role_permissions.append((role_id, permission_id))
-        return True
+        """为角色分配权限"""
+        with db_pool.get_cursor() as cursor:
+            try:
+                cursor.execute(
+                    "INSERT INTO role_permissions (role_id, permission_id) VALUES (%s, %s)",
+                    (role_id, permission_id)
+                )
+                return True
+            except:
+                return False
     
     def remove_permission_from_role(self, role_id, permission_id):
-        self.role_permissions = [(r_id, p_id) for r_id, p_id in self.role_permissions 
-                                 if not (r_id == role_id and p_id == permission_id)]
-        return True
+        """移除角色的权限"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(
+                "DELETE FROM role_permissions WHERE role_id = %s AND permission_id = %s",
+                (role_id, permission_id)
+            )
+            return cursor.rowcount > 0
     
     def get_role_permissions(self, role_id):
         """获取角色的所有权限ID"""
-        return [p_id for r_id, p_id in self.role_permissions if r_id == role_id]
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(
+                "SELECT permission_id FROM role_permissions WHERE role_id = %s",
+                (role_id,)
+            )
+            rows = cursor.fetchall()
+            return [row['permission_id'] for row in rows]
+    
+    def get_role_permissions_detail(self, role_id):
+        """获取角色的所有权限详情"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT p.id, p.code, p.name, p.resource, p.action, p.description
+                FROM permissions p
+                JOIN role_permissions rp ON p.id = rp.permission_id
+                WHERE rp.role_id = %s
+            """, (role_id,))
+            rows = cursor.fetchall()
+            return [{
+                'id': row['id'],
+                'code': row['code'],
+                'name': row['name'],
+                'resource': row['resource'],
+                'action': row['action'],
+                'description': row['description']
+            } for row in rows]
+    
+    # ==================== 用户权限相关方法 ====================
     
     def get_user_permission_codes(self, user_id):
         """获取用户的所有权限代码"""
-        user_roles = self.get_user_roles(user_id)
-        permission_codes = set()
-        
-        for role_id in user_roles:
-            role_perms = self.get_role_permissions(role_id)
-            for perm_id in role_perms:
-                perm = self.get_permission_by_id(perm_id)
-                if perm:
-                    permission_codes.add(perm.code)
-        
-        return list(permission_codes)
+        with db_pool.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT DISTINCT p.code
+                FROM permissions p
+                JOIN role_permissions rp ON p.id = rp.permission_id
+                JOIN user_roles ur ON rp.role_id = ur.role_id
+                WHERE ur.user_id = %s
+            """, (user_id,))
+            rows = cursor.fetchall()
+            return [row['code'] for row in rows]
     
     def get_user_permissions_detail(self, user_id):
         """获取用户的所有权限详情"""
-        user_roles = self.get_user_roles(user_id)
-        permissions = []
-        seen = set()
-        
-        for role_id in user_roles:
-            role_perms = self.get_role_permissions(role_id)
-            for perm_id in role_perms:
-                if perm_id not in seen:
-                    perm = self.get_permission_by_id(perm_id)
-                    if perm:
-                        # 根据 resource 推断 type
-                        perm_type = 'unknown'
-                        if perm.resource.startswith('menu:'):
-                            perm_type = 'menu'
-                        elif perm.resource.startswith('page:'):
-                            perm_type = 'page'
-                        elif perm.resource.startswith('button:'):
-                            perm_type = 'button'
-                        elif perm.resource.startswith('api:'):
-                            perm_type = 'api'
-                        else:
-                            perm_type = perm.resource
-                        
-                        permissions.append({
-                            'id': perm.id,
-                            'code': perm.code,
-                            'name': perm.name,
-                            'resource': perm.resource,
-                            'action': perm.action,
-                            'type': perm_type  # 添加 type 字段
-                        })
-                        seen.add(perm_id)
-        
-        return permissions
+        with db_pool.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT DISTINCT p.id, p.code, p.name, p.resource, p.action, p.description
+                FROM permissions p
+                JOIN role_permissions rp ON p.id = rp.permission_id
+                JOIN user_roles ur ON rp.role_id = ur.role_id
+                WHERE ur.user_id = %s
+                ORDER BY p.id
+            """, (user_id,))
+            rows = cursor.fetchall()
+            return [{
+                'id': row['id'],
+                'code': row['code'],
+                'name': row['name'],
+                'resource': row['resource'],
+                'action': row['action'],
+                'description': row['description']
+            } for row in rows]
     
     def has_permission(self, user_id, permission_code):
         """检查用户是否有指定权限"""
-        permission_codes = self.get_user_permission_codes(user_id)
-        return permission_code in permission_codes
+        with db_pool.get_cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*) as cnt
+                FROM permissions p
+                JOIN role_permissions rp ON p.id = rp.permission_id
+                JOIN user_roles ur ON rp.role_id = ur.role_id
+                WHERE ur.user_id = %s AND p.code = %s
+            """, (user_id, permission_code))
+            row = cursor.fetchone()
+            return row['cnt'] > 0
     
     def has_any_permission(self, user_id, permission_codes):
         """检查用户是否有任一权限"""
-        user_perms = self.get_user_permission_codes(user_id)
-        return any(p in user_perms for p in permission_codes)
+        if not permission_codes:
+            return True
+        
+        placeholders = ','.join(['%s'] * len(permission_codes))
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(f"""
+                SELECT COUNT(*) as cnt
+                FROM permissions p
+                JOIN role_permissions rp ON p.id = rp.permission_id
+                JOIN user_roles ur ON rp.role_id = ur.role_id
+                WHERE ur.user_id = %s AND p.code IN ({placeholders})
+                LIMIT 1
+            """, (user_id, *permission_codes))
+            row = cursor.fetchone()
+            return row['cnt'] > 0
     
     def has_all_permissions(self, user_id, permission_codes):
         """检查用户是否有所有权限"""
-        user_perms = self.get_user_permission_codes(user_id)
-        return all(p in user_perms for p in permission_codes)
+        if not permission_codes:
+            return True
+        
+        placeholders = ','.join(['%s'] * len(permission_codes))
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(f"""
+                SELECT COUNT(DISTINCT p.code) as cnt
+                FROM permissions p
+                JOIN role_permissions rp ON p.id = rp.permission_id
+                JOIN user_roles ur ON rp.role_id = ur.role_id
+                WHERE ur.user_id = %s AND p.code IN ({placeholders})
+            """, (user_id, *permission_codes))
+            row = cursor.fetchone()
+            return row['cnt'] == len(permission_codes)
+    
+    # ==================== 操作日志相关方法 ====================
+    
+    def add_operation_log(self, user_id, username, operation, target_type, target_id, details, ip_address):
+        """添加操作日志"""
+        with db_pool.get_cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO operation_logs (user_id, username, operation, target_type, target_id, details, ip_address)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (user_id, username, operation, target_type, target_id, details, ip_address))
+            return cursor.lastrowid
+    
+    def get_operation_logs(self, limit=100, offset=0, user_id=None, operation=None):
+        """获取操作日志"""
+        conditions = []
+        params = []
+        
+        if user_id:
+            conditions.append("user_id = %s")
+            params.append(user_id)
+        if operation:
+            conditions.append("operation = %s")
+            params.append(operation)
+        
+        where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+        params.extend([limit, offset])
+        
+        with db_pool.get_cursor() as cursor:
+            cursor.execute(f"""
+                SELECT id, user_id, username, operation, target_type, target_id, details, ip_address, created_at
+                FROM operation_logs
+                {where_clause}
+                ORDER BY created_at DESC
+                LIMIT %s OFFSET %s
+            """, params)
+            rows = cursor.fetchall()
+            return [{
+                'id': row['id'],
+                'user_id': row['user_id'],
+                'username': row['username'],
+                'operation': row['operation'],
+                'target_type': row['target_type'],
+                'target_id': row['target_id'],
+                'details': row['details'],
+                'ip_address': row['ip_address'],
+                'created_at': row['created_at'].isoformat() if row['created_at'] else None
+            } for row in rows]
 
 
 # 全局数据库实例

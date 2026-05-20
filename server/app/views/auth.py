@@ -24,7 +24,12 @@ def init_auth_routes(bp):
         if not user or not user.is_active:
             return jsonify({'error': '用户名或密码错误'}), 401
         
-        if not bcrypt.checkpw(password.encode('utf-8'), user.password_hash):
+        # 修复：确保 password_hash 是字节类型
+        password_hash = user.password_hash
+        if isinstance(password_hash, str):
+            password_hash = password_hash.encode('utf-8')
+        
+        if not bcrypt.checkpw(password.encode('utf-8'), password_hash):
             return jsonify({'error': '用户名或密码错误'}), 401
         
         access_token = create_access_token(identity=str(user.id))
@@ -63,9 +68,7 @@ def init_auth_routes(bp):
                 api_permissions.append(code)
         
         # 如果没有专门的 menu/page/button 权限，使用基于资源的映射
-        # 例如 user:view 应该映射到页面权限
         if not menu_permissions:
-            # 根据资源类型映射到菜单/页面权限
             for code in permission_codes:
                 if code.startswith('leak:'):
                     menu_permissions.append('menu:leak:scan')
@@ -118,7 +121,7 @@ def init_auth_routes(bp):
                 'roles': roles_detail,
                 'permissions': {
                     'all': permission_codes,
-                    'menus': list(set(menu_permissions)),  # 去重
+                    'menus': list(set(menu_permissions)),
                     'pages': list(set(page_permissions)),
                     'buttons': list(set(button_permissions)),
                     'apis': api_permissions,
