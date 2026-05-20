@@ -1,41 +1,188 @@
-/* 角色管理页面样式 */
+/* ========== 角色管理页面样式 - 企业级 ========== */
 
-.roles-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 1.5rem;
+.management-container {
+  background: var(--bg-primary);
+  border-radius: var(--radius-2xl);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
 }
 
-.role-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: box-shadow 0.2s;
-}
-
-.role-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.role-card-header {
-  padding: 1rem 1.25rem;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+.header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.role-card-header h3 {
-  margin: 0 0 0.5rem 0;
-  color: #1e293b;
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header h1::before {
+  content: "👥";
+  font-size: 1.5rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.search-box-small {
+  position: relative;
+}
+
+.search-box-small::before {
+  content: "🔍";
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: var(--gray-400);
+}
+
+.search-input-small {
+  padding: 0.5rem 1rem 0.5rem 2rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  width: 220px;
+  transition: all var(--transition-fast);
+}
+
+.search-input-small:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  width: 260px;
+}
+
+/* 统计卡片 */
+.role-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, var(--gray-50), var(--bg-primary));
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+  font-size: 2rem;
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-600);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+/* 角色列表容器 */
+.roles-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* 角色卡片项 */
+.role-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  transition: all var(--transition-fast);
+  overflow: hidden;
+}
+
+.role-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-200);
+}
+
+.role-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.role-info {
+  flex: 2;
+}
+
+.role-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.builtin-badge {
+  font-size: 0.65rem;
+  font-weight: 500;
+  padding: 0.2rem 0.5rem;
+  background: var(--gray-200);
+  color: var(--gray-700);
+  border-radius: 20px;
 }
 
 .role-description {
-  color: #64748b;
-  font-size: 0.85rem;
-  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-tertiary);
+}
+
+.role-stats-info {
+  display: flex;
+  gap: 1rem;
+}
+
+.stat-badge {
+  font-size: var(--font-size-xs);
+  padding: 0.25rem 0.75rem;
+  background: var(--bg-primary);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
 }
 
 .role-actions {
@@ -43,63 +190,755 @@
   gap: 0.5rem;
 }
 
-.role-card-body {
-  padding: 1.25rem;
+/* 按钮样式 */
+.btn-view, .btn-edit, .btn-delete, .btn-permission {
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
-.permissions-section {
-  margin-top: 0;
+.btn-view {
+  background: var(--info-50);
+  color: var(--info-700);
 }
 
-.permissions-header {
+.btn-view:hover {
+  background: var(--info-100);
+  transform: translateY(-1px);
+}
+
+.btn-edit {
+  background: var(--primary-50);
+  color: var(--primary-700);
+}
+
+.btn-edit:hover {
+  background: var(--primary-100);
+  transform: translateY(-1px);
+}
+
+.btn-permission {
+  background: var(--warning-50);
+  color: var(--warning-700);
+}
+
+.btn-permission:hover {
+  background: var(--warning-100);
+  transform: translateY(-1px);
+}
+
+.btn-delete {
+  background: var(--error-50);
+  color: var(--error-700);
+}
+
+.btn-delete:hover {
+  background: var(--error-100);
+  transform: translateY(-1px);
+}
+
+.btn-add {
+  background: linear-gradient(135deg, var(--primary-500), var(--primary-700));
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-xl);
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-add:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-add-small {
+  background: var(--primary-500);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  border: none;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+/* 角色主体内容 */
+.role-item-body {
+  padding: 1rem 1.5rem;
+}
+
+.permissions-preview {
+  width: 100%;
+}
+
+.preview-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.75rem;
 }
 
-.permissions-header strong {
-  font-size: 0.9rem;
-  color: #334155;
+.preview-header span {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 
-.add-permission-btn {
-  background: #10b981;
-  color: white;
+.add-permission-link {
+  font-size: var(--font-size-xs);
+  color: var(--primary-600);
+  background: none;
   border: none;
-  padding: 0.25rem 0.6rem;
-  border-radius: 6px;
-  font-size: 0.75rem;
   cursor: pointer;
+  padding: 0.2rem 0.5rem;
 }
 
-.add-permission-btn:hover {
-  background: #059669;
+.add-permission-link:hover {
+  text-decoration: underline;
 }
 
-.permissions-list {
+.preview-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
+.permission-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--primary-50);
+  color: var(--primary-700);
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+}
+
 .remove-permission {
   background: none;
   border: none;
-  color: #dc2626;
+  color: var(--error-500);
   cursor: pointer;
   font-weight: bold;
-  margin-left: 0.25rem;
   font-size: 1rem;
   line-height: 1;
+  padding: 0 0.2rem;
 }
 
 .remove-permission:hover {
-  color: #b91c1c;
+  color: var(--error-700);
 }
 
-.no-permissions {
-  color: #94a3b8;
-  font-size: 0.8rem;
+.empty-tags {
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
   font-style: italic;
+}
+
+.more-tag {
+  background: var(--gray-200);
+  color: var(--gray-600);
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+}
+
+/* 详情弹窗样式 */
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detail-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+}
+
+.role-detail-desc {
+  color: var(--text-tertiary);
+  font-size: var(--font-size-sm);
+  margin: 0;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.detail-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detail-tab {
+  padding: 0.6rem 1.2rem;
+  background: none;
+  border: none;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border-bottom: 2px solid transparent;
+}
+
+.detail-tab:hover {
+  color: var(--primary-600);
+}
+
+.detail-tab.active {
+  color: var(--primary-600);
+  border-bottom-color: var(--primary-600);
+}
+
+/* 详情页权限列表 */
+.detail-permissions {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.detail-permission-group {
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.detail-permission-group-title {
+  padding: 0.6rem 1rem;
+  background: var(--gray-50);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detail-permission-list {
+  padding: 0.5rem;
+}
+
+.detail-permission-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+}
+
+.detail-permission-item:hover {
+  background: var(--gray-50);
+}
+
+.detail-permission-code {
+  font-family: monospace;
+  font-size: 0.75rem;
+  background: var(--gray-100);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--primary-700);
+  min-width: 120px;
+}
+
+.detail-permission-name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.action-tag {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 500;
+}
+
+.action-view { background: #dbeafe; color: #1e40af; }
+.action-create { background: #d1fae5; color: #065f46; }
+.action-edit { background: #fed7aa; color: #92400e; }
+.action-delete { background: #fee2e2; color: #991b1b; }
+.action-manage { background: #e0e7ff; color: #3730a3; }
+.action-extract { background: #fef3c7; color: #92400e; }
+.action-export { background: #cffafe; color: #155e75; }
+
+/* 详情页用户列表 */
+.detail-users {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-table th,
+.user-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.user-table th {
+  background: var(--gray-50);
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.user-table tr:hover {
+  background: var(--gray-50);
+}
+
+/* 权限分配弹窗 */
+.permission-filter {
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.permission-filter select {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.permission-list-modal {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.permission-group-modal {
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.permission-group-title {
+  padding: 0.5rem 1rem;
+  background: var(--gray-50);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+
+.permission-items {
+  padding: 0.5rem;
+}
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.permission-item:hover {
+  background: var(--primary-50);
+}
+
+.permission-item-code {
+  font-family: monospace;
+  font-size: 0.75rem;
+  background: var(--gray-100);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  min-width: 120px;
+}
+
+.permission-item-name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+}
+
+.permission-item-desc {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  max-width: 200px;
+}
+
+.add-permission-btn {
+  padding: 0.2rem 0.6rem;
+  background: var(--primary-500);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.7rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.permission-item:hover .add-permission-btn {
+  opacity: 1;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state p {
+  color: var(--text-tertiary);
+  margin-bottom: 1rem;
+}
+
+.empty-permissions, .empty-users {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-tertiary);
+}
+
+.no-permissions-message {
+  text-align: center;
+  padding: 2rem;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .management-container {
+    padding: 1rem;
+  }
+  
+  .role-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .role-item-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .role-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .search-input-small {
+    width: 100%;
+  }
+  
+  .search-input-small:focus {
+    width: 100%;
+  }
+  
+  .permission-item {
+    flex-wrap: wrap;
+  }
+  
+  .permission-item-desc {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+/* 动画 */
+.role-item {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========== 增强的权限管理样式 ========== */
+
+/* 权限标签优化 */
+.permission-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--primary-50);
+  border-radius: 20px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.7rem;
+  transition: all var(--transition-fast);
+}
+
+.permission-tag:hover {
+  background: var(--primary-100);
+}
+
+.perm-code {
+  font-family: monospace;
+  font-weight: 500;
+  color: var(--primary-700);
+}
+
+.perm-name {
+  color: var(--text-secondary);
+}
+
+/* 权限工具栏 */
+.permission-toolbar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+}
+
+.permission-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.permission-filter label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.permission-filter select {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+.permission-search {
+  flex: 1;
+  min-width: 200px;
+}
+
+.permission-search .search-input {
+  width: 100%;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+}
+
+/* 批量操作按钮 */
+.batch-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-batch-mode {
+  padding: 0.4rem 0.8rem;
+  background: var(--gray-200);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-batch-mode.active {
+  background: var(--primary-500);
+  color: white;
+}
+
+.btn-batch-remove {
+  padding: 0.4rem 0.8rem;
+  background: var(--error-500);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+.btn-batch-assign {
+  padding: 0.4rem 0.8rem;
+  background: var(--primary-500);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+}
+
+/* 复选框样式 */
+.permission-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary-500);
+}
+
+.group-checkbox {
+  margin-right: 0.5rem;
+}
+
+.group-select-all {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+/* 详情页权限项优化 */
+.detail-permission-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  transition: background var(--transition-fast);
+}
+
+.detail-permission-item:hover {
+  background: var(--gray-50);
+}
+
+.detail-permission-code {
+  font-family: monospace;
+  font-size: 0.75rem;
+  background: var(--gray-100);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--primary-700);
+  min-width: 120px;
+}
+
+.detail-permission-name {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.remove-permission-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  opacity: 0.6;
+  transition: all var(--transition-fast);
+}
+
+.remove-permission-btn:hover {
+  opacity: 1;
+  background: var(--error-50);
+}
+
+/* 分组标题优化 */
+.detail-permission-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: var(--gray-50);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.group-count {
+  font-size: 0.7rem;
+  font-weight: normal;
+  color: var(--text-tertiary);
+  background: var(--gray-200);
+  padding: 0.1rem 0.4rem;
+  border-radius: 12px;
+}
+
+/* 更多标签 */
+.more-tag {
+  background: var(--gray-200);
+  color: var(--gray-600);
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.more-tag:hover {
+  background: var(--primary-500);
+  color: white;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .permission-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .permission-filter {
+    justify-content: space-between;
+  }
+  
+  .batch-actions {
+    justify-content: flex-end;
+  }
+  
+  .detail-permission-item {
+    flex-wrap: wrap;
+  }
+  
+  .detail-permission-code {
+    width: 100%;
+  }
+}
+
+/* 全选按钮样式 */
+.btn-select-all {
+  padding: 0.4rem 0.8rem;
+  background: var(--gray-200);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-select-all:hover {
+  background: var(--gray-300);
+}
+
+/* 批量操作按钮禁用状态 */
+.btn-batch-assign:disabled,
+.btn-batch-remove:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
