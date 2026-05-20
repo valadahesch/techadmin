@@ -3,9 +3,7 @@
 from flask import g, request, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, get_jwt_identity, verify_jwt_in_request
-from functools import wraps
 
-from app.models import db
 
 # 初始化扩展
 cors = CORS()
@@ -31,33 +29,30 @@ def init_before_request(app):
     @app.before_request
     def before_request():
         """在每个请求之前执行，加载用户权限信息到g对象"""
-        # 处理OPTIONS预检请求
         if request.method == 'OPTIONS':
             return
         
-        # 公开路径不需要权限检查
-        public_paths = ['/api/auth/login', '/api/auth/register']
+        public_paths = ['/api/auth/login']
         if request.path in public_paths:
             return
         
-        # 尝试验证JWT token
         try:
             verify_jwt_in_request(optional=True)
             user_id = get_jwt_identity()
             if user_id:
                 user_id_int = int(user_id)
-                user = db.get_user_by_id(user_id_int)
+                # 延迟导入避免循环
+                from app.repositories.user_repo import user_repo
+                user = user_repo.get_by_id(user_id_int)
                 if user and user.is_active:
-                    # 将用户信息和权限存储到g对象中，供后续使用
                     g.current_user = {
                         'id': user.id,
                         'username': user.username,
                         'email': user.email
                     }
-                    g.user_permissions = db.get_user_permission_codes(user_id_int)
-                    g.user_roles = db.get_user_roles(user_id_int)
+                    g.user_permissions = user_repo.get_user_permission_codes(user_id_int)
+                    g.user_roles = user_repo.get_user_roles(user_id_int)
         except Exception as e:
-            # token无效，但允许继续（由具体接口决定是否需要认证）
             pass
 
 

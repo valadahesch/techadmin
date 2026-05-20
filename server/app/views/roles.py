@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import request, jsonify
-from app.models import db
+from app.repositories.role_repo import role_repo
 from app.decorators import api_permission_required
 
 
@@ -12,34 +12,24 @@ def init_role_routes(bp):
     @api_permission_required()
     def get_roles():
         """获取角色列表"""
-        return jsonify(db.get_all_roles()), 200
+        roles = role_repo.get_all_roles_with_permissions()
+        return jsonify(roles), 200
     
     @bp.route('/roles/<int:role_id>', methods=['GET'])
     @api_permission_required()
     def get_role(role_id):
         """获取单个角色详情"""
-        role = db.get_role_by_id(role_id)
+        role = role_repo.get_role_with_permissions(role_id)
         if not role:
             return jsonify({'error': '角色不存在'}), 404
-        
-        role_perms = db.get_role_permissions(role_id)
-        permissions_detail = []
-        for perm_id in role_perms:
-            perm = db.get_permission_by_id(perm_id)
-            if perm:
-                permissions_detail.append({
-                    'id': perm.id,
-                    'code': perm.code,
-                    'name': perm.name
-                })
         
         return jsonify({
             'id': role.id,
             'name': role.name,
             'description': role.description,
             'is_builtin': role.is_builtin,
-            'permissions': role_perms,
-            'permissions_detail': permissions_detail
+            'permissions': [p.id for p in role.permissions],
+            'permissions_detail': [p.to_dict() for p in role.permissions]
         }), 200
     
     @bp.route('/roles', methods=['POST'])
@@ -53,7 +43,10 @@ def init_role_routes(bp):
         if not name:
             return jsonify({'error': '角色名称不能为空'}), 400
         
-        role = db.create_role(name, description)
+        role = role_repo.create_role(name, description)
+        if not role:
+            return jsonify({'error': '角色名称已存在'}), 409
+        
         return jsonify({
             'id': role.id,
             'name': role.name,
@@ -65,7 +58,7 @@ def init_role_routes(bp):
     def update_role(role_id):
         """更新角色"""
         data = request.get_json()
-        role = db.update_role(role_id, data)
+        role = role_repo.update_role(role_id, data)
         if not role:
             return jsonify({'error': '角色不存在'}), 404
         return jsonify({'message': '更新成功'}), 200
@@ -74,7 +67,7 @@ def init_role_routes(bp):
     @api_permission_required()
     def delete_role(role_id):
         """删除角色"""
-        if not db.delete_role(role_id):
+        if not role_repo.delete_role(role_id):
             return jsonify({'error': '角色不存在或为内置角色'}), 404
         return '', 204
     
@@ -88,7 +81,7 @@ def init_role_routes(bp):
         if not permission_id:
             return jsonify({'error': 'permission_id 不能为空'}), 400
         
-        if db.assign_permission_to_role(role_id, permission_id):
+        if role_repo.assign_permission(role_id, permission_id):
             return jsonify({'message': '权限分配成功'}), 200
         return jsonify({'error': '角色或权限不存在'}), 404
     
@@ -96,5 +89,5 @@ def init_role_routes(bp):
     @api_permission_required()
     def remove_permission_from_role(role_id, permission_id):
         """移除角色的权限"""
-        db.remove_permission_from_role(role_id, permission_id)
+        role_repo.remove_permission(role_id, permission_id)
         return jsonify({'message': '权限移除成功'}), 200
