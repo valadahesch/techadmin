@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getUsers, createUser, updateUser, deleteUser, assignRoleToUser, removeRoleFromUser, getRoles } from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
+import { usePermission } from '../../hooks/usePermission';
 
 function UserManagement() {
   const [users, setUsers] = useState([]);
@@ -11,9 +12,7 @@ function UserManagement() {
   const [roleModalVisible, setRoleModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const { hasPermission } = useAuth();
-
-  const canWrite = hasPermission('user:write');
-  const canDelete = hasPermission('user:delete');
+  const { canCreateUser, canEditUser, canDeleteUser, canAssignRole } = usePermission();
 
   useEffect(() => {
     loadUsers();
@@ -90,7 +89,7 @@ function UserManagement() {
     <div className="management-container">
       <div className="header">
         <h1>用户管理</h1>
-        {canWrite && (
+        {canCreateUser() && (
           <button className="btn-add" onClick={() => {
             setEditingUser(null);
             setModalVisible(true);
@@ -126,13 +125,13 @@ function UserManagement() {
                     return role ? (
                       <span key={roleId} className="role-tag">
                         {role.name}
-                        {canWrite && (
+                        {canAssignRole() && (
                           <button onClick={() => handleRemoveRole(user.id, roleId)} className="remove-role">×</button>
                         )}
                       </span>
                     ) : null;
                   })}
-                  {canWrite && (
+                  {canAssignRole() && (
                     <button onClick={() => {
                       setSelectedUser(user);
                       setRoleModalVisible(true);
@@ -146,13 +145,13 @@ function UserManagement() {
                   </div>
                 </td>
                 <td>
-                  {canWrite && (
+                  {canEditUser() && (
                     <button className="btn-edit" onClick={() => {
                       setEditingUser(user);
                       setModalVisible(true);
                     }}>编辑</button>
                   )}
-                  {canDelete && (
+                  {canDeleteUser() && (
                     <button className="btn-delete" onClick={() => handleDelete(user.id)}>删除</button>
                   )}
                 </td>
