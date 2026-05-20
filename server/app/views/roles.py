@@ -2,7 +2,7 @@
 
 from flask import request, jsonify
 from app.models import db
-from app.decorators import permission_required, api_permission_required
+from app.decorators import api_permission_required
 
 
 def init_role_routes(bp):
@@ -14,8 +14,36 @@ def init_role_routes(bp):
         """获取角色列表"""
         return jsonify(db.get_all_roles()), 200
     
+    @bp.route('/roles/<int:role_id>', methods=['GET'])
+    @api_permission_required()
+    def get_role(role_id):
+        """获取单个角色详情"""
+        role = db.get_role_by_id(role_id)
+        if not role:
+            return jsonify({'error': '角色不存在'}), 404
+        
+        role_perms = db.get_role_permissions(role_id)
+        permissions_detail = []
+        for perm_id in role_perms:
+            perm = db.get_permission_by_id(perm_id)
+            if perm:
+                permissions_detail.append({
+                    'id': perm.id,
+                    'code': perm.code,
+                    'name': perm.name
+                })
+        
+        return jsonify({
+            'id': role.id,
+            'name': role.name,
+            'description': role.description,
+            'is_builtin': role.is_builtin,
+            'permissions': role_perms,
+            'permissions_detail': permissions_detail
+        }), 200
+    
     @bp.route('/roles', methods=['POST'])
-    @permission_required('button:role:create')
+    @api_permission_required()
     def create_role():
         """创建角色"""
         data = request.get_json()
@@ -33,7 +61,7 @@ def init_role_routes(bp):
         }), 201
     
     @bp.route('/roles/<int:role_id>', methods=['PUT'])
-    @permission_required('button:role:edit')
+    @api_permission_required()
     def update_role(role_id):
         """更新角色"""
         data = request.get_json()
@@ -43,7 +71,7 @@ def init_role_routes(bp):
         return jsonify({'message': '更新成功'}), 200
     
     @bp.route('/roles/<int:role_id>', methods=['DELETE'])
-    @permission_required('button:role:delete')
+    @api_permission_required()
     def delete_role(role_id):
         """删除角色"""
         if not db.delete_role(role_id):
@@ -51,7 +79,7 @@ def init_role_routes(bp):
         return '', 204
     
     @bp.route('/roles/<int:role_id>/permissions', methods=['POST'])
-    @permission_required('button:role:assign_permission')
+    @api_permission_required()
     def assign_permission_to_role(role_id):
         """为角色分配权限"""
         data = request.get_json()
@@ -65,7 +93,7 @@ def init_role_routes(bp):
         return jsonify({'error': '角色或权限不存在'}), 404
     
     @bp.route('/roles/<int:role_id>/permissions/<int:permission_id>', methods=['DELETE'])
-    @permission_required('button:role:assign_permission')
+    @api_permission_required()
     def remove_permission_from_role(role_id, permission_id):
         """移除角色的权限"""
         db.remove_permission_from_role(role_id, permission_id)

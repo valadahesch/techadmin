@@ -17,5 +17,9 @@ def register_blueprints(app):
     permissions.init_permission_routes(api_bp)
     leak_scan.init_leak_scan_routes(api_bp)
     
+    # 如果有测评模块，取消下面的注释
+    # from app.views import assessment
+    # assessment.init_assessment_routes(api_bp)
+    
     # 注册到应用
     app.register_blueprint(api_bp)

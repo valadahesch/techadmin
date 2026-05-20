@@ -22,18 +22,17 @@ class Role:
         self.id = id
         self.name = name
         self.description = description
-        self.is_builtin = is_builtin  # 是否内置角色（不可删除）
+        self.is_builtin = is_builtin
 
 
 class Permission:
-    """权限模型 - 细粒度权限控制"""
-    def __init__(self, id, name, code, type, resource, action, description=None):
+    """权限模型 - 基于资源操作"""
+    def __init__(self, id, code, name, resource, action, description=None):
         self.id = id
-        self.name = name              # 权限名称（显示用）
-        self.code = code              # 权限代码（如: user:create）
-        self.type = type              # 权限类型: menu, page, button, api
-        self.resource = resource      # 资源名称
-        self.action = action          # 操作: view, create, edit, delete, *
+        self.code = code          # 权限代码，如: user:view, user:create
+        self.name = name          # 权限名称（显示用）
+        self.resource = resource  # 资源类型: user, role, permission, leak, assessment
+        self.action = action      # 操作: view, create, edit, delete, manage, extract
         self.description = description
 
 
@@ -44,65 +43,46 @@ class AuthDB:
         self.users = []
         self.roles = []
         self.permissions = []
-        self.user_roles = []          # 用户-角色关联
-        self.role_permissions = []    # 角色-权限关联
+        self.user_roles = []
+        self.role_permissions = []
         self._next_ids = {'user': 1, 'role': 1, 'permission': 1}
         
-        # 初始化基础数据
         self._init_data()
     
     def _init_data(self):
         """初始化基础数据"""
-        # 1. 创建权限（细粒度）
+        # 1. 创建权限（基于资源操作）
         permissions_data = [
-            # 菜单权限
-            (1, '漏扫处理菜单', 'menu:leak:scan', 'menu', 'leak_scan', 'view', '漏扫处理菜单'),
-            (2, '测评录入菜单', 'menu:assessment', 'menu', 'assessment', 'view', '测评录入菜单'),
-            (3, '系统设置菜单', 'menu:system:settings', 'menu', 'system_settings', 'view', '系统设置菜单'),
+            # 用户管理权限
+            (1, 'user:view', '查看用户', 'user', 'view', '查看用户列表和详情'),
+            (2, 'user:create', '创建用户', 'user', 'create', '创建新用户'),
+            (3, 'user:edit', '编辑用户', 'user', 'edit', '编辑用户信息'),
+            (4, 'user:delete', '删除用户', 'user', 'delete', '删除用户'),
             
-            # 页面权限
-            (4, '用户管理页面', 'page:user:management', 'page', 'user', 'view', '用户管理页面'),
-            (5, '角色管理页面', 'page:role:management', 'page', 'role', 'view', '角色管理页面'),
-            (6, '权限管理页面', 'page:permission:management', 'page', 'permission', 'view', '权限管理页面'),
-            (7, '项目管理页面', 'page:project:management', 'page', 'project', 'view', '项目管理页面'),
-            (8, '规则管理页面', 'page:rule:management', 'page', 'rule', 'view', '规则管理页面'),
+            # 角色管理权限
+            (5, 'role:view', '查看角色', 'role', 'view', '查看角色列表'),
+            (6, 'role:manage', '管理角色', 'role', 'manage', '创建/编辑/删除角色，分配权限'),
             
-            # 用户管理按钮权限
-            (9, '新增用户按钮', 'button:user:create', 'button', 'user', 'create', '新增用户按钮'),
-            (10, '编辑用户按钮', 'button:user:edit', 'button', 'user', 'edit', '编辑用户按钮'),
-            (11, '删除用户按钮', 'button:user:delete', 'button', 'user', 'delete', '删除用户按钮'),
-            (12, '分配角色按钮', 'button:user:assign_role', 'button', 'user', 'assign_role', '分配角色按钮'),
+            # 权限管理权限
+            (7, 'permission:view', '查看权限', 'permission', 'view', '查看权限列表'),
             
-            # 角色管理按钮权限
-            (13, '新增角色按钮', 'button:role:create', 'button', 'role', 'create', '新增角色按钮'),
-            (14, '编辑角色按钮', 'button:role:edit', 'button', 'role', 'edit', '编辑角色按钮'),
-            (15, '删除角色按钮', 'button:role:delete', 'button', 'role', 'delete', '删除角色按钮'),
-            (16, '分配权限按钮', 'button:role:assign_permission', 'button', 'role', 'assign_permission', '分配权限按钮'),
+            # 漏扫处理权限
+            (8, 'leak:view', '查看漏扫', 'leak', 'view', '查看漏扫页面'),
+            (9, 'leak:extract', '漏扫提取', 'leak', 'extract', '提取漏扫数据'),
+            (10, 'leak:export', '漏扫导出', 'leak', 'export', '导出漏扫数据'),
             
-            # API接口权限
-            (17, '用户列表API', 'api:GET:/api/users', 'api', '/api/users', 'GET', '获取用户列表'),
-            (18, '创建用户API', 'api:POST:/api/users', 'api', '/api/users', 'POST', '创建用户'),
-            (19, '更新用户API', 'api:PUT:/api/users/*', 'api', '/api/users/*', 'PUT', '更新用户'),
-            (20, '删除用户API', 'api:DELETE:/api/users/*', 'api', '/api/users/*', 'DELETE', '删除用户'),
-            (21, '分配角色API', 'api:POST:/api/users/*/roles', 'api', '/api/users/*/roles', 'POST', '分配角色'),
-            (22, '角色列表API', 'api:GET:/api/roles', 'api', '/api/roles', 'GET', '获取角色列表'),
-            (23, '创建角色API', 'api:POST:/api/roles', 'api', '/api/roles', 'POST', '创建角色'),
-            (24, '更新角色API', 'api:PUT:/api/roles/*', 'api', '/api/roles/*', 'PUT', '更新角色'),
-            (25, '删除角色API', 'api:DELETE:/api/roles/*', 'api', '/api/roles/*', 'DELETE', '删除角色'),
-            (26, '权限列表API', 'api:GET:/api/permissions', 'api', '/api/permissions', 'GET', '获取权限列表'),
-            (27, '分配权限API', 'api:POST:/api/roles/*/permissions', 'api', '/api/roles/*/permissions', 'POST', '分配权限'),
-            (28, '漏扫提取API', 'api:POST:/api/leak-scan/extract', 'api', '/api/leak-scan/extract', 'POST', '漏扫提取'),
-            (29, '项目管理API', 'api:GET:/api/projects', 'api', '/api/projects', 'GET', '项目管理'),
-            (30, '规则管理API', 'api:GET:/api/rules', 'api', '/api/rules', 'GET', '规则管理'),
+            # 测评录入权限
+            (11, 'assessment:view', '查看测评', 'assessment', 'view', '查看测评页面'),
+            (12, 'assessment:manage', '管理测评', 'assessment', 'manage', '管理测评项目和规则'),
         ]
         
         for perm in permissions_data:
             self.permissions.append(Permission(*perm))
-        self._next_ids['permission'] = 31
+        self._next_ids['permission'] = 13
         
         # 2. 创建角色
         admin_role = Role(1, 'admin', '系统管理员，拥有所有权限', True)
-        user_role = Role(2, 'user', '普通用户，只有查看权限', True)
+        user_role = Role(2, 'user', '普通用户，查看权限', True)
         guest_role = Role(3, 'guest', '访客，最小权限', True)
         
         self.roles = [admin_role, user_role, guest_role]
@@ -113,13 +93,13 @@ class AuthDB:
         for perm in self.permissions:
             self.role_permissions.append((1, perm.id))
         
-        # user: 只有查看权限（页面和菜单）
-        user_perms = [1, 2, 4, 5, 6, 7, 8, 17, 22, 26]
+        # user: 查看权限
+        user_perms = [1, 5, 7, 8, 11]  # user:view, role:view, permission:view, leak:view, assessment:view
         for perm_id in user_perms:
             self.role_permissions.append((2, perm_id))
         
-        # guest: 只能查看漏扫处理
-        guest_perms = [1, 17]
+        # guest: 只能查看漏扫
+        guest_perms = [8]  # leak:view
         for perm_id in guest_perms:
             self.role_permissions.append((3, perm_id))
         
@@ -147,7 +127,7 @@ class AuthDB:
     def get_all_users(self):
         users_data = []
         for user in self.users:
-            user_roles = [r_id for u_id, r_id in self.user_roles if u_id == user.id]
+            user_roles = self.get_user_roles(user.id)
             users_data.append({
                 'id': user.id,
                 'username': user.username,
@@ -201,7 +181,7 @@ class AuthDB:
         return True
     
     def get_user_roles(self, user_id):
-        """获取用户的所有角色"""
+        """获取用户的所有角色ID"""
         return [r_id for u_id, r_id in self.user_roles if u_id == user_id]
     
     # ========== 角色相关方法 ==========
@@ -211,7 +191,7 @@ class AuthDB:
     def get_all_roles(self):
         roles_data = []
         for role in self.roles:
-            role_perms = [p_id for r_id, p_id in self.role_permissions if r_id == role.id]
+            role_perms = self.get_role_permissions(role.id)
             roles_data.append({
                 'id': role.id,
                 'name': role.name,
@@ -240,7 +220,7 @@ class AuthDB:
     
     def delete_role(self, role_id):
         role = self.get_role_by_id(role_id)
-        if role and not role.is_builtin:  # 内置角色不可删除
+        if role and not role.is_builtin:
             self.roles.remove(role)
             self.role_permissions = [(r_id, p_id) for r_id, p_id in self.role_permissions if r_id != role_id]
             self.user_roles = [(u_id, r_id) for u_id, r_id in self.user_roles if r_id != role_id]
@@ -256,11 +236,10 @@ class AuthDB:
     
     def get_all_permissions(self):
         return [{
-            'id': p.id, 
-            'name': p.name, 
+            'id': p.id,
             'code': p.code,
-            'type': p.type, 
-            'resource': p.resource, 
+            'name': p.name,
+            'resource': p.resource,
             'action': p.action,
             'description': p.description
         } for p in self.permissions]
@@ -278,11 +257,11 @@ class AuthDB:
         return True
     
     def get_role_permissions(self, role_id):
-        """获取角色的所有权限"""
+        """获取角色的所有权限ID"""
         return [p_id for r_id, p_id in self.role_permissions if r_id == role_id]
-        
+    
     def get_user_permission_codes(self, user_id):
-        """获取用户的所有权限代码（通过角色）- 返回列表"""
+        """获取用户的所有权限代码"""
         user_roles = self.get_user_roles(user_id)
         permission_codes = set()
         
@@ -293,65 +272,59 @@ class AuthDB:
                 if perm:
                     permission_codes.add(perm.code)
         
-        # 返回列表而不是 set，避免 JSON 序列化问题
         return list(permission_codes)
     
     def get_user_permissions_detail(self, user_id):
         """获取用户的所有权限详情"""
         user_roles = self.get_user_roles(user_id)
         permissions = []
+        seen = set()
         
         for role_id in user_roles:
             role_perms = self.get_role_permissions(role_id)
             for perm_id in role_perms:
-                perm = self.get_permission_by_id(perm_id)
-                if perm:
-                    permissions.append({
-                        'id': perm.id,
-                        'code': perm.code,
-                        'name': perm.name,
-                        'type': perm.type,
-                        'resource': perm.resource,
-                        'action': perm.action
-                    })
+                if perm_id not in seen:
+                    perm = self.get_permission_by_id(perm_id)
+                    if perm:
+                        # 根据 resource 推断 type
+                        perm_type = 'unknown'
+                        if perm.resource.startswith('menu:'):
+                            perm_type = 'menu'
+                        elif perm.resource.startswith('page:'):
+                            perm_type = 'page'
+                        elif perm.resource.startswith('button:'):
+                            perm_type = 'button'
+                        elif perm.resource.startswith('api:'):
+                            perm_type = 'api'
+                        else:
+                            perm_type = perm.resource
+                        
+                        permissions.append({
+                            'id': perm.id,
+                            'code': perm.code,
+                            'name': perm.name,
+                            'resource': perm.resource,
+                            'action': perm.action,
+                            'type': perm_type  # 添加 type 字段
+                        })
+                        seen.add(perm_id)
         
-        # 去重
-        unique_perms = {}
-        for p in permissions:
-            if p['code'] not in unique_perms:
-                unique_perms[p['code']] = p
-        
-        return list(unique_perms.values())
+        return permissions
     
     def has_permission(self, user_id, permission_code):
         """检查用户是否有指定权限"""
         permission_codes = self.get_user_permission_codes(user_id)
         return permission_code in permission_codes
     
-    def has_api_permission(self, user_id, method, path):
-        """检查用户是否有API访问权限"""
-        permission_codes = self.get_user_permission_codes(user_id)
-        
-        # 管理员拥有所有权限
-        if 'api:*' in permission_codes:
-            return True
-        
-        # 构建API权限代码
-        api_code = f"api:{method}:{path}"
-        
-        # 精确匹配
-        if api_code in permission_codes:
-            return True
-        
-        # 通配符匹配（如 /api/users/* 匹配 /api/users/1）
-        for code in permission_codes:
-            if code.startswith('api:') and '*' in code:
-                pattern = code.replace('*', '([^/]+)')
-                import re
-                if re.match(pattern.replace('api:', ''), f"{method}:{path}"):
-                    return True
-        
-        return False
+    def has_any_permission(self, user_id, permission_codes):
+        """检查用户是否有任一权限"""
+        user_perms = self.get_user_permission_codes(user_id)
+        return any(p in user_perms for p in permission_codes)
+    
+    def has_all_permissions(self, user_id, permission_codes):
+        """检查用户是否有所有权限"""
+        user_perms = self.get_user_permission_codes(user_id)
+        return all(p in user_perms for p in permission_codes)
 
 
 # 全局数据库实例

@@ -14,14 +14,26 @@ def init_permission_routes(bp):
         """获取权限列表"""
         return jsonify(db.get_all_permissions()), 200
     
-    @bp.route('/permissions/types', methods=['GET'])
+    @bp.route('/permissions/<int:permission_id>', methods=['GET'])
     @api_permission_required()
-    def get_permission_types():
-        """获取权限类型列表"""
-        permission_types = [
-            {'value': 'menu', 'label': '菜单权限'},
-            {'value': 'page', 'label': '页面权限'},
-            {'value': 'button', 'label': '按钮权限'},
-            {'value': 'api', 'label': 'API权限'}
-        ]
-        return jsonify(permission_types), 200
+    def get_permission(permission_id):
+        """获取单个权限详情"""
+        perm = db.get_permission_by_id(permission_id)
+        if not perm:
+            return jsonify({'error': '权限不存在'}), 404
+        
+        return jsonify({
+            'id': perm.id,
+            'code': perm.code,
+            'name': perm.name,
+            'resource': perm.resource,
+            'action': perm.action,
+            'description': perm.description
+        }), 200
+    
+    @bp.route('/permissions/resources', methods=['GET'])
+    @api_permission_required()
+    def get_permission_resources():
+        """获取权限资源类型列表"""
+        resources = list(set([p.resource for p in db.permissions]))
+        return jsonify(resources), 200

@@ -6,6 +6,7 @@ import zipfile
 from flask import request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
+from app.decorators import api_permission_required
 
 # 上传文件配置
 UPLOAD_FOLDER = 'uploads'
@@ -25,7 +26,7 @@ def init_leak_scan_routes(bp):
     """初始化漏扫处理相关路由"""
     
     @bp.route('/leak-scan/extract', methods=['POST'])
-    @jwt_required()
+    @api_permission_required()
     def extract_leak_scan():
         """处理漏扫文件提取"""
         try:
@@ -100,7 +101,7 @@ def init_leak_scan_routes(bp):
             return jsonify({'error': str(e)}), 500
     
     @bp.route('/leak-scan/link-to-project', methods=['POST'])
-    @jwt_required()
+    @api_permission_required()
     def link_leak_scan_to_project():
         """将漏扫结果关联到项目"""
         try:
@@ -121,3 +122,13 @@ def init_leak_scan_routes(bp):
             
         except Exception as e:
             return jsonify({'error': str(e)}), 500
+    
+    @bp.route('/leak-scan/history', methods=['GET'])
+    @api_permission_required()
+    def get_leak_scan_history():
+        """获取漏扫历史记录"""
+        # TODO: 实现获取历史记录的逻辑
+        return jsonify({
+            'success': True,
+            'data': []
+        }), 200

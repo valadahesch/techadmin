@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from flask import request, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import db
-from app.decorators import permission_required, api_permission_required
+from app.decorators import api_permission_required
 
 
 def init_user_routes(bp):
@@ -26,8 +26,39 @@ def init_user_routes(bp):
                     })
         return jsonify(users), 200
     
+    @bp.route('/users/<int:user_id>', methods=['GET'])
+    @api_permission_required()
+    def get_user(user_id):
+        """获取单个用户详情"""
+        user = db.get_user_by_id(user_id)
+        if not user:
+            return jsonify({'error': '用户不存在'}), 404
+        
+        user_roles = db.get_user_roles(user_id)
+        permissions = db.get_user_permission_codes(user_id)
+        
+        roles_detail = []
+        for role_id in user_roles:
+            role = db.get_role_by_id(role_id)
+            if role:
+                roles_detail.append({
+                    'id': role.id,
+                    'name': role.name,
+                    'description': role.description
+                })
+        
+        return jsonify({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'is_active': user.is_active,
+            'roles': roles_detail,
+            'permissions': permissions,
+            'created_at': user.created_at.isoformat()
+        }), 200
+    
     @bp.route('/users', methods=['POST'])
-    @permission_required('button:user:create')
+    @api_permission_required()
     def create_user():
         """创建用户"""
         data = request.get_json()
@@ -53,7 +84,7 @@ def init_user_routes(bp):
         }), 201
     
     @bp.route('/users/<int:user_id>', methods=['PUT'])
-    @permission_required('button:user:edit')
+    @api_permission_required()
     def update_user(user_id):
         """更新用户"""
         data = request.get_json()
@@ -63,7 +94,7 @@ def init_user_routes(bp):
         return jsonify({'message': '更新成功'}), 200
     
     @bp.route('/users/<int:user_id>', methods=['DELETE'])
-    @permission_required('button:user:delete')
+    @api_permission_required()
     def delete_user(user_id):
         """删除用户"""
         if not db.delete_user(user_id):
@@ -71,7 +102,7 @@ def init_user_routes(bp):
         return '', 204
     
     @bp.route('/users/<int:user_id>/roles', methods=['POST'])
-    @permission_required('button:user:assign_role')
+    @api_permission_required()
     def assign_role_to_user(user_id):
         """为用户分配角色"""
         data = request.get_json()
@@ -85,7 +116,7 @@ def init_user_routes(bp):
         return jsonify({'error': '用户或角色不存在'}), 404
     
     @bp.route('/users/<int:user_id>/roles/<int:role_id>', methods=['DELETE'])
-    @permission_required('button:user:assign_role')
+    @api_permission_required()
     def remove_role_from_user(user_id, role_id):
         """移除用户的角色"""
         db.remove_role_from_user(user_id, role_id)

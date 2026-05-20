@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getCurrentUser } from '../api';
+import { canAccessMenu, canAccessPage, canUseButton } from '../config/permissionMap';
 
 const AuthContext = createContext(null);
 
@@ -14,14 +15,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [permissions, setPermissions] = useState({
-    all: [],
-    menus: [],
-    pages: [],
-    buttons: [],
-    apis: [],
-    details: []
-  });
+  const [permissions, setPermissions] = useState([]);
 
   useEffect(() => {
     checkAuth();
@@ -35,9 +29,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const userData = JSON.parse(storedUser);
         setUser(userData);
-        if (userData.permissions) {
-          setPermissions(userData.permissions);
-        }
+        setPermissions(userData.permissions?.all || []);
       } catch (error) {
         console.error('Auth check failed:', error);
         localStorage.removeItem('access_token');
@@ -63,14 +55,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('access_token', data.access_token);
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
-    setPermissions(data.user.permissions || {
-      all: [],
-      menus: [],
-      pages: [],
-      buttons: [],
-      apis: [],
-      details: []
-    });
+    setPermissions(data.user.permissions?.all || []);
     return data;
   };
 
@@ -78,44 +63,37 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     setUser(null);
-    setPermissions({
-      all: [],
-      menus: [],
-      pages: [],
-      buttons: [],
-      apis: [],
-      details: []
-    });
+    setPermissions([]);
   };
 
   // 检查是否有指定权限
   const hasPermission = (permissionCode) => {
-    return permissions.all.includes(permissionCode);
+    return permissions.includes(permissionCode);
   };
 
   // 检查是否有任一权限
   const hasAnyPermission = (permissionCodes) => {
-    return permissionCodes.some(code => permissions.all.includes(code));
+    return permissionCodes.some(code => permissions.includes(code));
   };
 
   // 检查是否有所有权限
   const hasAllPermissions = (permissionCodes) => {
-    return permissionCodes.every(code => permissions.all.includes(code));
+    return permissionCodes.every(code => permissions.includes(code));
   };
 
-  // 检查是否有菜单权限
+  // 检查菜单权限
   const hasMenuPermission = (menuCode) => {
-    return permissions.menus.includes(menuCode);
+    return canAccessMenu(permissions, menuCode);
   };
 
-  // 检查是否有页面权限
-  const hasPagePermission = (pageCode) => {
-    return permissions.pages.includes(pageCode);
+  // 检查页面权限
+  const hasPagePermission = (path) => {
+    return canAccessPage(permissions, path);
   };
 
-  // 检查是否有按钮权限
+  // 检查按钮权限
   const hasButtonPermission = (buttonCode) => {
-    return permissions.buttons.includes(buttonCode);
+    return canUseButton(permissions, buttonCode);
   };
 
   const value = {
