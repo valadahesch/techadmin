@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import * as XLSX from 'xlsx';
-import './LeakScan.css';
+import '../../styles/pages/LeakScan.css';
 
 function LeakScan() {
   const { user } = useAuth();

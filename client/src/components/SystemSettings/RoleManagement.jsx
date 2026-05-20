@@ -9,6 +9,7 @@ import {
   removePermissionFromRole
 } from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
+import '../../styles/pages/RoleManagement.css';
 
 function RoleManagement() {
   const [roles, setRoles] = useState([]);

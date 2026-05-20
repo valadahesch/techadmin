@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getPermissions } from '../../api';
 import { useAuth } from '../../contexts/AuthContext';
+import '../../styles/pages/PermissionManagement.css';
 
 function PermissionManagement() {
   const [permissions, setPermissions] = useState([]);

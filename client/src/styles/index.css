@@ -1,0 +1,6 @@
+/* 全局样式入口 - 导入所有样式 */
+
+@import './variables.css';
+@import './reset.css';
+@import './common.css';
+@import './layout.css';

@@ -1,0 +1,130 @@
+/* 权限管理页面样式 */
+
+.permissions-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.permission-group {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.group-header {
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.group-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.group-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+}
+
+.permission-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.permission-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.permission-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.permission-card-header {
+  padding: 0.75rem 1rem;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.permission-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.permission-badge {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.action-read {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.action-write {
+  background: #fed7aa;
+  color: #92400e;
+}
+
+.action-delete {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.permission-card-body {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.permission-detail {
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+}
+
+.detail-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.detail-value {
+  color: #334155;
+  margin-left: 0.5rem;
+  font-family: monospace;
+}
+
+.permission-card-footer {
+  padding: 0.75rem 1rem;
+  background: white;
+}
+
+.permission-description {
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+}

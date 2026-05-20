@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import '../../styles/pages/ProjectManagement.css';
 
 function ProjectManagement() {
   const { hasPermission } = useAuth();

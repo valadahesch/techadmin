@@ -9,7 +9,7 @@ import RuleManagement from './components/Assessment/RuleManagement';
 import UserManagement from './components/SystemSettings/UserManagement';
 import RoleManagement from './components/SystemSettings/RoleManagement';
 import PermissionManagement from './components/SystemSettings/PermissionManagement';
-import './App.css';
+// import './App.css';
 
 function App() {
   return (
