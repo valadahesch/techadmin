@@ -41,24 +41,18 @@ function App() {
                 <RuleManagement />
               </ProtectedRoute>
             } />
-            
-            {/* 系统设置 - 用户管理 */}
             <Route path="/system/users" element={
-              <ProtectedRoute requiredPermission="user:read">
+              <ProtectedRoute requiredPage="page:user:management">
                 <UserManagement />
               </ProtectedRoute>
             } />
-            
-            {/* 系统设置 - 角色管理 */}
             <Route path="/system/roles" element={
-              <ProtectedRoute requiredPermission="role:read">
+              <ProtectedRoute requiredPage="page:role:management">
                 <RoleManagement />
               </ProtectedRoute>
             } />
-            
-            {/* 系统设置 - 权限管理 */}
             <Route path="/system/permissions" element={
-              <ProtectedRoute requiredPermission="permission:read">
+              <ProtectedRoute requiredPage="page:permission:management">
                 <PermissionManagement />
               </ProtectedRoute>
             } />

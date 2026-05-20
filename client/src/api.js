@@ -91,4 +91,9 @@ export const removePermissionFromRole = (roleId, permissionId) =>
 
 // ========== 权限管理 ==========
 export const getPermissions = () => 
-  apiClient.get('/permissions').then(res => res.data).catch(handleError);
+  apiClient.get('/permissions')
+    .then(res => {
+      console.log('Permissions API response:', res.data);
+      return res.data;
+    })
+    .catch(handleError);

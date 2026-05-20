@@ -33,10 +33,11 @@ API_PERMISSION_MAP = {
     
     # ========== 权限管理 ==========
     'GET:/api/permissions': ['permission:view'],
-    'GET:/api/permissions/types': ['permission:view'],
+    'GET:/api/permissions/*': ['permission:view'],
+    'GET:/api/permissions/resources': ['permission:view'],
     
     # ========== 漏扫处理 ==========
-    'GET:/api/leak-scan/*': ['leak:view'],
+    'GET:/api/leak-scan/history': ['leak:view'],
     'POST:/api/leak-scan/extract': ['leak:extract'],
     'POST:/api/leak-scan/link-to-project': ['leak:export'],
     

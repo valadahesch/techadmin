@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { usePermission } from '../hooks/usePermission';
 
 function Layout() {
-  const { user, logout } = useAuth();
-  const { canViewMenu } = usePermission();
+  const { user, logout, hasMenuPermission, hasPagePermission } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -34,6 +32,13 @@ function Layout() {
     return paths.some(path => location.pathname === path);
   };
 
+  // 检查是否应该显示系统设置菜单
+  const shouldShowSystemSettings = () => {
+    return hasPagePermission('page:user:management') || 
+           hasPagePermission('page:role:management') || 
+           hasPagePermission('page:permission:management');
+  };
+
   return (
     <div className="layout">
       <nav className="sidebar">
@@ -46,44 +51,40 @@ function Layout() {
         </div>
         
         <ul className="nav-menu">
-          {/* 漏扫处理 - 需要菜单权限 */}
-          {canViewMenu('menu:leak:scan') && (
-            <li className="nav-item">
-              <Link to="/leak-scan" className={`nav-link ${isActive('/leak-scan') ? 'active' : ''}`}>
-                🔍 漏扫处理
-              </Link>
-            </li>
-          )}
+          {/* 漏扫处理 */}
+          <li className="nav-item">
+            <Link to="/leak-scan" className={`nav-link ${isActive('/leak-scan') ? 'active' : ''}`}>
+              🔍 漏扫处理
+            </Link>
+          </li>
 
-          {/* 测评录入 - 需要菜单权限 */}
-          {canViewMenu('menu:assessment') && (
-            <li className="nav-item">
-              <div 
-                className={`nav-header ${isSubMenuActive(['/assessment/projects', '/assessment/rules']) ? 'active-parent' : ''}`}
-                onClick={() => toggleMenu('assessment')}
-              >
-                <span>📝 测评录入</span>
-                <span className={`arrow ${expandedMenus.assessment ? 'expanded' : ''}`}>▼</span>
-              </div>
-              {expandedMenus.assessment && (
-                <ul className="sub-menu">
-                  <li>
-                    <Link to="/assessment/projects" className={`sub-nav-link ${isActive('/assessment/projects') ? 'active' : ''}`}>
-                      📋 项目管理
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/assessment/rules" className={`sub-nav-link ${isActive('/assessment/rules') ? 'active' : ''}`}>
-                      ⚙️ 规则管理
-                    </Link>
-                  </li>
-                </ul>
-              )}
-            </li>
-          )}
+          {/* 测评录入 */}
+          <li className="nav-item">
+            <div 
+              className={`nav-header ${isSubMenuActive(['/assessment/projects', '/assessment/rules']) ? 'active-parent' : ''}`}
+              onClick={() => toggleMenu('assessment')}
+            >
+              <span>📝 测评录入</span>
+              <span className={`arrow ${expandedMenus.assessment ? 'expanded' : ''}`}>▼</span>
+            </div>
+            {expandedMenus.assessment && (
+              <ul className="sub-menu">
+                <li>
+                  <Link to="/assessment/projects" className={`sub-nav-link ${isActive('/assessment/projects') ? 'active' : ''}`}>
+                    📋 项目管理
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/assessment/rules" className={`sub-nav-link ${isActive('/assessment/rules') ? 'active' : ''}`}>
+                    ⚙️ 规则管理
+                  </Link>
+                </li>
+              </ul>
+            )}
+          </li>
 
-          {/* 系统设置 - 需要菜单权限 */}
-          {canViewMenu('menu:system:settings') && (
+          {/* 系统设置 - 条件显示 */}
+          {shouldShowSystemSettings() && (
             <li className="nav-item">
               <div 
                 className={`nav-header ${isSubMenuActive(['/system/users', '/system/roles', '/system/permissions']) ? 'active-parent' : ''}`}

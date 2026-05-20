@@ -29,9 +29,9 @@ def init_auth_routes(bp):
         
         access_token = create_access_token(identity=str(user.id))
         
-        # 获取用户权限详情
-        permissions = db.get_user_permissions_detail(user.id)
+        # 获取用户权限
         permission_codes = db.get_user_permission_codes(user.id)
+        permissions_detail = db.get_user_permissions_detail(user.id)
         user_roles = db.get_user_roles(user.id)
         
         # 获取角色详情
@@ -45,15 +45,69 @@ def init_auth_routes(bp):
                     'description': role.description
                 })
         
-        # 修复：使用 resource 而不是 type 来分类权限
-        # 菜单权限：resource 以 'menu:' 开头
-        menu_permissions = [p for p in permissions if p['resource'].startswith('menu:')]
-        # 页面权限：resource 以 'page:' 开头  
-        page_permissions = [p for p in permissions if p['resource'].startswith('page:')]
-        # 按钮权限：resource 以 'button:' 开头
-        button_permissions = [p for p in permissions if p['resource'].startswith('button:')]
-        # API权限：resource 以 'api:' 开头
-        api_permissions = [p for p in permissions if p['resource'].startswith('api:')]
+        # 分类权限 - 根据权限代码前缀
+        menu_permissions = []
+        page_permissions = []
+        button_permissions = []
+        api_permissions = []
+        
+        for perm in permissions_detail:
+            code = perm['code']
+            if code.startswith('menu:'):
+                menu_permissions.append(code)
+            elif code.startswith('page:'):
+                page_permissions.append(code)
+            elif code.startswith('button:'):
+                button_permissions.append(code)
+            elif code.startswith('api:'):
+                api_permissions.append(code)
+        
+        # 如果没有专门的 menu/page/button 权限，使用基于资源的映射
+        # 例如 user:view 应该映射到页面权限
+        if not menu_permissions:
+            # 根据资源类型映射到菜单/页面权限
+            for code in permission_codes:
+                if code.startswith('leak:'):
+                    menu_permissions.append('menu:leak:scan')
+                elif code.startswith('assessment:'):
+                    menu_permissions.append('menu:assessment')
+                elif code.startswith('user:') or code.startswith('role:') or code.startswith('permission:'):
+                    menu_permissions.append('menu:system:settings')
+        
+        if not page_permissions:
+            for code in permission_codes:
+                if code == 'user:view':
+                    page_permissions.append('page:user:management')
+                elif code == 'role:view':
+                    page_permissions.append('page:role:management')
+                elif code == 'permission:view':
+                    page_permissions.append('page:permission:management')
+                elif code == 'leak:view':
+                    page_permissions.append('page:leak:scan')
+                elif code == 'assessment:view':
+                    page_permissions.append('page:assessment:management')
+        
+        if not button_permissions:
+            for code in permission_codes:
+                if code == 'user:create':
+                    button_permissions.append('button:user:create')
+                elif code == 'user:edit':
+                    button_permissions.append('button:user:edit')
+                elif code == 'user:delete':
+                    button_permissions.append('button:user:delete')
+                elif code == 'role:manage':
+                    button_permissions.append('button:role:create')
+                    button_permissions.append('button:role:edit')
+                    button_permissions.append('button:role:delete')
+                    button_permissions.append('button:role:assign_permission')
+                elif code == 'leak:extract':
+                    button_permissions.append('button:leak:extract')
+                elif code == 'leak:export':
+                    button_permissions.append('button:leak:export')
+                elif code == 'assessment:manage':
+                    button_permissions.append('button:assessment:create')
+                    button_permissions.append('button:assessment:edit')
+                    button_permissions.append('button:assessment:delete')
         
         return jsonify({
             'access_token': access_token,
@@ -64,11 +118,11 @@ def init_auth_routes(bp):
                 'roles': roles_detail,
                 'permissions': {
                     'all': permission_codes,
-                    'menus': [p['code'] for p in menu_permissions],
-                    'pages': [p['code'] for p in page_permissions],
-                    'buttons': [p['code'] for p in button_permissions],
-                    'apis': [p['code'] for p in api_permissions],
-                    'details': permissions
+                    'menus': list(set(menu_permissions)),  # 去重
+                    'pages': list(set(page_permissions)),
+                    'buttons': list(set(button_permissions)),
+                    'apis': api_permissions,
+                    'details': permissions_detail
                 }
             }
         }), 200
@@ -84,8 +138,8 @@ def init_auth_routes(bp):
         if not user:
             return jsonify({'error': '用户不存在'}), 404
         
-        permissions = db.get_user_permissions_detail(user_id)
         permission_codes = db.get_user_permission_codes(user_id)
+        permissions_detail = db.get_user_permissions_detail(user_id)
         user_roles = db.get_user_roles(user_id)
         
         roles_detail = []
@@ -105,7 +159,7 @@ def init_auth_routes(bp):
             'is_active': user.is_active,
             'roles': roles_detail,
             'permissions': permission_codes,
-            'permissions_detail': permissions
+            'permissions_detail': permissions_detail
         }), 200
     
     @bp.route('/auth/user-permissions', methods=['GET'])
