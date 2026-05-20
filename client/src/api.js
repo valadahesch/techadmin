@@ -51,6 +51,9 @@ export const getCurrentUser = () =>
 export const getUsers = () => 
   apiClient.get('/users').then(res => res.data).catch(handleError);
 
+export const getUser = (id) => 
+  apiClient.get(`/users/${id}`).then(res => res.data).catch(handleError);
+
 export const createUser = (user) => 
   apiClient.post('/users', user).then(res => res.data).catch(handleError);
 
@@ -72,6 +75,9 @@ export const removeRoleFromUser = (userId, roleId) =>
 export const getRoles = () => 
   apiClient.get('/roles').then(res => res.data).catch(handleError);
 
+export const getRole = (id) => 
+  apiClient.get(`/roles/${id}`).then(res => res.data).catch(handleError);
+
 export const createRole = (role) => 
   apiClient.post('/roles', role).then(res => res.data).catch(handleError);
 
@@ -89,11 +95,60 @@ export const removePermissionFromRole = (roleId, permissionId) =>
   apiClient.delete(`/roles/${roleId}/permissions/${permissionId}`)
     .then(res => res.data).catch(handleError);
 
-// ========== 权限管理 ==========
+// ========== 权限管理 CRUD ==========
 export const getPermissions = () => 
-  apiClient.get('/permissions')
-    .then(res => {
-      console.log('Permissions API response:', res.data);
-      return res.data;
-    })
-    .catch(handleError);
+  apiClient.get('/permissions').then(res => res.data).catch(handleError);
+
+export const getPermission = (id) => 
+  apiClient.get(`/permissions/${id}`).then(res => res.data).catch(handleError);
+
+export const createPermission = (permission) => 
+  apiClient.post('/permissions', permission).then(res => res.data).catch(handleError);
+
+export const updatePermission = (id, permission) => 
+  apiClient.put(`/permissions/${id}`, permission).then(res => res.data).catch(handleError);
+
+export const deletePermission = (id) => 
+  apiClient.delete(`/permissions/${id}`).catch(handleError);
+
+// ========== API 权限映射管理 ==========
+export const getApiPermissionMappings = () => 
+  apiClient.get('/api-permission-mappings').then(res => res.data).catch(handleError);
+
+export const createApiPermissionMapping = (data) => 
+  apiClient.post('/api-permission-mappings', data).then(res => res.data).catch(handleError);
+
+export const deleteApiPermissionMapping = (id) => 
+  apiClient.delete(`/api-permission-mappings/${id}`).catch(handleError);
+
+// ========== 漏扫处理 ==========
+export const extractLeakScan = async (formData) => {
+  const token = localStorage.getItem('access_token');
+  
+  const response = await fetch('http://localhost:5000/api/leak-scan/extract', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    },
+    body: formData
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || `请求失败: ${response.status}`);
+  }
+  
+  return response.json();
+};
+
+export const linkLeakScanToProject = async (data) => {
+  const response = await apiClient.post('/leak-scan/link-to-project', data);
+  return response.data;
+};
+
+// ========== 其他辅助接口 ==========
+export const getPermissionResources = () => 
+  apiClient.get('/permissions/resources').then(res => res.data).catch(handleError);
+
+export const getPermissionActions = () => 
+  apiClient.get('/permissions/actions').then(res => res.data).catch(handleError);

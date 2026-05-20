@@ -1,130 +1,104 @@
-/* 权限管理页面样式 */
-
-.permissions-groups {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  margin-bottom: 2rem;
-}
-
-.permission-group {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid #e2e8f0;
-}
-
-.group-header {
-  padding: 1rem 1.25rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.group-header h2 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-
-.group-count {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-}
-
-.permission-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
-  padding: 1.25rem;
-}
-
-.permission-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.permission-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.permission-card-header {
-  padding: 0.75rem 1rem;
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.permission-name {
-  font-weight: 600;
-  color: #1e293b;
-  font-family: monospace;
-  font-size: 0.9rem;
-}
-
-.permission-badge {
+/* Tab 切换样式 */
+.tab-buttons {
   display: flex;
   gap: 0.5rem;
+  background: var(--gray-100);
+  padding: 0.25rem;
+  border-radius: var(--radius-2xl);
 }
 
-.action-badge {
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
+.tab-btn {
+  padding: 0.5rem 1.5rem;
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-sm);
   font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: transparent;
+  color: var(--gray-600);
 }
 
-.action-read {
-  background: #dbeafe;
-  color: #1e40af;
+.tab-btn.active {
+  background: var(--bg-primary);
+  color: var(--primary-600);
+  box-shadow: var(--shadow-sm);
 }
 
-.action-write {
-  background: #fed7aa;
-  color: #92400e;
+/* API 映射视图 */
+.api-mappings-view {
+  margin-top: 1rem;
 }
 
-.action-delete {
-  background: #fee2e2;
-  color: #b91c1c;
+.mappings-description {
+  background: var(--info-50);
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.5rem;
+  font-size: var(--font-size-sm);
+  color: var(--info-700);
 }
 
-.permission-card-body {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.permission-detail {
-  font-size: 0.8rem;
-  margin-bottom: 0.25rem;
-}
-
-.detail-label {
-  color: #64748b;
-  font-weight: 500;
-}
-
-.detail-value {
-  color: #334155;
-  margin-left: 0.5rem;
+.mappings-description code {
+  background: var(--info-100);
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
   font-family: monospace;
 }
 
-.permission-card-footer {
-  padding: 0.75rem 1rem;
-  background: white;
+.mapping-group {
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
-.permission-description {
-  font-size: 0.75rem;
-  color: #64748b;
-  line-height: 1.4;
+.mapping-group-header {
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mapping-group-header h3 {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+}
+
+.mapping-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mapping-table th,
+.mapping-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mapping-table th {
+  background: var(--bg-primary);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.mapping-table tr:hover {
+  background: var(--bg-tertiary);
+}
+
+.mapping-table code {
+  font-family: monospace;
+  font-size: var(--font-size-sm);
+  color: var(--primary-600);
+}
+
+.permission-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
 }

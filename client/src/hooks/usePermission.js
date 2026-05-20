@@ -12,8 +12,14 @@ export const usePermission = () => {
     hasMenuPermission,
     hasPagePermission,
     hasButtonPermission,
-    permissions 
+    permissions,
+    user
   } = useAuth();
+
+  // 检查是否为管理员（admin 用户拥有所有权限）
+  const isAdmin = () => {
+    return user?.username === 'admin';
+  };
 
   return {
     // 基础权限检查
@@ -30,24 +36,28 @@ export const usePermission = () => {
     permissions: permissions,
     
     // 快捷权限检查方法
-    isAdmin: () => hasPermission('role:admin') || permissions.all.includes('*'),
+    isAdmin: isAdmin,
     
     // 用户管理权限
-    canViewUsers: () => hasPagePermission('page:user:management'),
-    canCreateUser: () => hasButtonPermission('button:user:create'),
-    canEditUser: () => hasButtonPermission('button:user:edit'),
-    canDeleteUser: () => hasButtonPermission('button:user:delete'),
-    canAssignRole: () => hasButtonPermission('button:user:assign_role'),
+    canViewUsers: () => isAdmin() || hasPermission('user:view'),
+    canCreateUser: () => isAdmin() || hasPermission('user:create'),
+    canEditUser: () => isAdmin() || hasPermission('user:edit'),
+    canDeleteUser: () => isAdmin() || hasPermission('user:delete'),
+    canAssignRole: () => isAdmin() || hasPermission('user:edit'),
     
     // 角色管理权限
-    canViewRoles: () => hasPagePermission('page:role:management'),
-    canCreateRole: () => hasButtonPermission('button:role:create'),
-    canEditRole: () => hasButtonPermission('button:role:edit'),
-    canDeleteRole: () => hasButtonPermission('button:role:delete'),
-    canAssignPermission: () => hasButtonPermission('button:role:assign_permission'),
+    canViewRoles: () => isAdmin() || hasPermission('role:view'),
+    canCreateRole: () => isAdmin() || hasPermission('role:manage'),
+    canEditRole: () => isAdmin() || hasPermission('role:manage'),
+    canDeleteRole: () => isAdmin() || hasPermission('role:manage'),
+    canAssignPermission: () => isAdmin() || hasPermission('role:manage'),
     
     // 漏扫处理权限
-    canViewLeakScan: () => hasMenuPermission('menu:leak:scan'),
-    canExtractLeakScan: () => hasButtonPermission('button:leak:extract'),
+    canViewLeakScan: () => isAdmin() || hasPermission('leak:view'),
+    canExtractLeakScan: () => isAdmin() || hasPermission('leak:extract'),
+    canExportLeakScan: () => isAdmin() || hasPermission('leak:export'),
+    
+    // 权限管理权限（用于权限管理页面）
+    canManagePermissions: () => isAdmin() || hasPermission('permission:manage'),
   };
 };
