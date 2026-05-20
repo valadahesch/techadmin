@@ -108,7 +108,6 @@ function UserManagement() {
               <th>邮箱</th>
               <th>状态</th>
               <th>角色</th>
-              <th>权限</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -120,7 +119,7 @@ function UserManagement() {
                 <td>{user.email}</td>
                 <td>{user.is_active ? '✅ 激活' : '❌ 禁用'}</td>
                 <td>
-                  {user.roles.map(roleId => {
+                  {user.roles && user.roles.map(roleId => {
                     const role = roles.find(r => r.id === roleId);
                     return role ? (
                       <span key={roleId} className="role-tag">
@@ -137,12 +136,6 @@ function UserManagement() {
                       setRoleModalVisible(true);
                     }} className="add-role-btn">+ 添加角色</button>
                   )}
-                </td>
-                <td>
-                  <div className="user-permissions">
-                    {user.permissions?.slice(0, 3).join(', ')}
-                    {user.permissions?.length > 3 && '...'}
-                  </div>
                 </td>
                 <td>
                   {canEditUser() && (
