@@ -8,13 +8,13 @@ function Layout() {
   const location = useLocation();
   
   const [expandedMenus, setExpandedMenus] = useState({
-    systemSettings: false
-    // 已删除 assessment
+    systemSettings: false,
+    dengbaoAssessment: false  // 新增：等保测评菜单状态
   });
   
-  // 新增：侧边栏收缩状态
+  // 侧边栏收缩状态
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  // 新增：移动端侧边栏状态
+  // 移动端侧边栏状态
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const handleLogout = () => {
@@ -23,30 +23,27 @@ function Layout() {
   };
 
   const toggleMenu = (menu) => {
-    if (sidebarCollapsed) return; // 收缩时禁止展开子菜单
+    if (sidebarCollapsed) return;
     setExpandedMenus(prev => ({
       ...prev,
       [menu]: !prev[menu]
     }));
   };
 
-  // 新增：切换侧边栏收缩
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
-    // 收缩时自动收起所有子菜单
     if (!sidebarCollapsed) {
       setExpandedMenus({
-        systemSettings: false
+        systemSettings: false,
+        dengbaoAssessment: false
       });
     }
   };
 
-  // 移动端打开侧边栏
   const openMobileSidebar = () => {
     setMobileSidebarOpen(true);
   };
 
-  // 移动端关闭侧边栏
   const closeMobileSidebar = () => {
     setMobileSidebarOpen(false);
   };
@@ -69,10 +66,7 @@ function Layout() {
   return (
     <div className={`layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       {/* 移动端菜单按钮 */}
-      <button 
-        className="mobile-menu-btn" 
-        onClick={openMobileSidebar}
-      >
+      <button className="mobile-menu-btn" onClick={openMobileSidebar}>
         ☰
       </button>
 
@@ -121,7 +115,56 @@ function Layout() {
             </Link>
           </li>
 
-          {/* 已删除测评录入模块 */}
+          {/* 新增：等保测评 */}
+          <li className="nav-item">
+            <div 
+              className={`nav-header ${isSubMenuActive([
+                '/dengbao/device-types',
+                '/dengbao/indicators',
+                '/dengbao/assessment-items',
+                '/dengbao/rules',
+                '/dengbao/projects'
+              ]) ? 'active-parent' : ''}`}
+              onClick={() => toggleMenu('dengbaoAssessment')}
+            >
+              <span className="nav-icon">📊</span>
+              {!sidebarCollapsed && (
+                <>
+                  <span className="nav-text">等保测评</span>
+                  <span className={`arrow ${expandedMenus.dengbaoAssessment ? 'expanded' : ''}`}>▼</span>
+                </>
+              )}
+            </div>
+            {!sidebarCollapsed && expandedMenus.dengbaoAssessment && (
+              <ul className="sub-menu">
+                <li>
+                  <Link to="/dengbao/device-types" className={`sub-nav-link ${isActive('/dengbao/device-types') ? 'active' : ''}`} onClick={closeMobileSidebar}>
+                    📱 设备类型管理
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/dengbao/indicators" className={`sub-nav-link ${isActive('/dengbao/indicators') ? 'active' : ''}`} onClick={closeMobileSidebar}>
+                    📈 测评指标管理
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/dengbao/assessment-items" className={`sub-nav-link ${isActive('/dengbao/assessment-items') ? 'active' : ''}`} onClick={closeMobileSidebar}>
+                    📝 测评项管理
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/dengbao/rules" className={`sub-nav-link ${isActive('/dengbao/rules') ? 'active' : ''}`} onClick={closeMobileSidebar}>
+                    ⚙️ 测评规则管理
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/dengbao/projects" className={`sub-nav-link ${isActive('/dengbao/projects') ? 'active' : ''}`} onClick={closeMobileSidebar}>
+                    🗂️ 测评项目管理
+                  </Link>
+                </li>
+              </ul>
+            )}
+          </li>
 
           {/* 系统设置 - 条件显示 */}
           {shouldShowSystemSettings() && (
