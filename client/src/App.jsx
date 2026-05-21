@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Login from './components/Login';
+import Dashboard from './components/Dashboard';  // 新增：导入Dashboard
 import LeakScan from './components/LeakScan/LeakScan';
 import ProjectManagement from './components/Assessment/ProjectManagement';
 import RuleManagement from './components/Assessment/RuleManagement';
@@ -18,10 +19,14 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<Layout />}>
-            {/* 默认重定向到漏扫处理 */}
-            <Route path="/" element={<Navigate to="/leak-scan" replace />} />
+            {/* 修改：默认进入Dashboard主页，而不是重定向到leak-scan */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
             
-            {/* 漏扫处理 */}
+            {/* 漏扫处理 - 保持原路由不变 */}
             <Route path="/leak-scan" element={
               <ProtectedRoute>
                 <LeakScan />
@@ -41,16 +46,19 @@ function App() {
                 <RuleManagement />
               </ProtectedRoute>
             } />
+            
             <Route path="/system/users" element={
               <ProtectedRoute requiredPage="page:user:management">
                 <UserManagement />
               </ProtectedRoute>
             } />
+            
             <Route path="/system/roles" element={
               <ProtectedRoute requiredPage="page:role:management">
                 <RoleManagement />
               </ProtectedRoute>
             } />
+            
             <Route path="/system/permissions" element={
               <ProtectedRoute requiredPage="page:permission:management">
                 <PermissionManagement />
