@@ -5,8 +5,6 @@ import Layout from './components/Layout';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';  // 新增：导入Dashboard
 import LeakScan from './components/LeakScan/LeakScan';
-import ProjectManagement from './components/Assessment/ProjectManagement';
-import RuleManagement from './components/Assessment/RuleManagement';
 import UserManagement from './components/SystemSettings/UserManagement';
 import RoleManagement from './components/SystemSettings/RoleManagement';
 import PermissionManagement from './components/SystemSettings/PermissionManagement';
@@ -30,20 +28,6 @@ function App() {
             <Route path="/leak-scan" element={
               <ProtectedRoute>
                 <LeakScan />
-              </ProtectedRoute>
-            } />
-            
-            {/* 测评录入 - 项目管理 */}
-            <Route path="/assessment/projects" element={
-              <ProtectedRoute>
-                <ProjectManagement />
-              </ProtectedRoute>
-            } />
-            
-            {/* 测评录入 - 规则管理 */}
-            <Route path="/assessment/rules" element={
-              <ProtectedRoute>
-                <RuleManagement />
               </ProtectedRoute>
             } />
             

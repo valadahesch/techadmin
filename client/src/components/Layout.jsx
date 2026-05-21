@@ -8,12 +8,14 @@ function Layout() {
   const location = useLocation();
   
   const [expandedMenus, setExpandedMenus] = useState({
-    systemSettings: false,
-    assessment: false
+    systemSettings: false
+    // 已删除 assessment
   });
   
   // 新增：侧边栏收缩状态
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // 新增：移动端侧边栏状态
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -34,10 +36,19 @@ function Layout() {
     // 收缩时自动收起所有子菜单
     if (!sidebarCollapsed) {
       setExpandedMenus({
-        systemSettings: false,
-        assessment: false
+        systemSettings: false
       });
     }
+  };
+
+  // 移动端打开侧边栏
+  const openMobileSidebar = () => {
+    setMobileSidebarOpen(true);
+  };
+
+  // 移动端关闭侧边栏
+  const closeMobileSidebar = () => {
+    setMobileSidebarOpen(false);
   };
 
   const isActive = (path) => {
@@ -57,7 +68,20 @@ function Layout() {
 
   return (
     <div className={`layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <nav className="sidebar">
+      {/* 移动端菜单按钮 */}
+      <button 
+        className="mobile-menu-btn" 
+        onClick={openMobileSidebar}
+      >
+        ☰
+      </button>
+
+      {/* 移动端遮罩层 */}
+      {mobileSidebarOpen && (
+        <div className="mobile-overlay" onClick={closeMobileSidebar}></div>
+      )}
+      
+      <nav className={`sidebar ${mobileSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           {!sidebarCollapsed && <h2>安全管理系统</h2>}
           {sidebarCollapsed && <div className="logo-mini">🔒</div>}
@@ -81,7 +105,7 @@ function Layout() {
         </div>
         
         <ul className="nav-menu">
-          {/* 新增：首页 */}
+          {/* 首页 */}
           <li className="nav-item">
             <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
               <span className="nav-icon">🏠</span>
@@ -97,35 +121,7 @@ function Layout() {
             </Link>
           </li>
 
-          {/* 测评录入 */}
-          <li className="nav-item">
-            <div 
-              className={`nav-header ${isSubMenuActive(['/assessment/projects', '/assessment/rules']) ? 'active-parent' : ''}`}
-              onClick={() => toggleMenu('assessment')}
-            >
-              <span className="nav-icon">📝</span>
-              {!sidebarCollapsed && (
-                <>
-                  <span className="nav-text">测评录入</span>
-                  <span className={`arrow ${expandedMenus.assessment ? 'expanded' : ''}`}>▼</span>
-                </>
-              )}
-            </div>
-            {!sidebarCollapsed && expandedMenus.assessment && (
-              <ul className="sub-menu">
-                <li>
-                  <Link to="/assessment/projects" className={`sub-nav-link ${isActive('/assessment/projects') ? 'active' : ''}`}>
-                    📋 项目管理
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/assessment/rules" className={`sub-nav-link ${isActive('/assessment/rules') ? 'active' : ''}`}>
-                    ⚙️ 规则管理
-                  </Link>
-                </li>
-              </ul>
-            )}
-          </li>
+          {/* 已删除测评录入模块 */}
 
           {/* 系统设置 - 条件显示 */}
           {shouldShowSystemSettings() && (
@@ -145,17 +141,17 @@ function Layout() {
               {!sidebarCollapsed && expandedMenus.systemSettings && (
                 <ul className="sub-menu">
                   <li>
-                    <Link to="/system/users" className={`sub-nav-link ${isActive('/system/users') ? 'active' : ''}`}>
+                    <Link to="/system/users" className={`sub-nav-link ${isActive('/system/users') ? 'active' : ''}`} onClick={closeMobileSidebar}>
                       👥 用户管理
                     </Link>
                   </li>
                   <li>
-                    <Link to="/system/roles" className={`sub-nav-link ${isActive('/system/roles') ? 'active' : ''}`}>
+                    <Link to="/system/roles" className={`sub-nav-link ${isActive('/system/roles') ? 'active' : ''}`} onClick={closeMobileSidebar}>
                       🔐 角色管理
                     </Link>
                   </li>
                   <li>
-                    <Link to="/system/permissions" className={`sub-nav-link ${isActive('/system/permissions') ? 'active' : ''}`}>
+                    <Link to="/system/permissions" className={`sub-nav-link ${isActive('/system/permissions') ? 'active' : ''}`} onClick={closeMobileSidebar}>
                       🔑 权限管理
                     </Link>
                   </li>
@@ -166,7 +162,7 @@ function Layout() {
         </ul>
       </nav>
       
-      <main className="main-content">
+      <main className="main-content" onClick={closeMobileSidebar}>
         <Outlet />
       </main>
     </div>
