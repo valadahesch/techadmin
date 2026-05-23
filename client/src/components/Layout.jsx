@@ -147,7 +147,7 @@ function Layout() {
               <ul className="sub-menu">
                 <li>
                   <Link to="/dengbao/device-types" className={`sub-nav-link ${isActive('/dengbao/device-types') ? 'active' : ''}`} onClick={closeMobileSidebar}>
-                    📱 设备类型管理
+                    📱 设备用途管理
                   </Link>
                 </li>
                 <li>

@@ -33,7 +33,7 @@ function DeviceTypeManagement() {
   return (
     <div className="management-container">
       <div className="page-header">
-        <h1>设备类型管理</h1>
+        <h1>设备用途管理</h1>
         <button className="btn-primary" onClick={() => { setEditingItem(null); setShowModal(true); }}>
           + 新增设备类型
         </button>
