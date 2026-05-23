@@ -13,6 +13,7 @@ import IndicatorManagement from './components/Dengbao/IndicatorManagement';
 import AssessmentItemManagement from './components/Dengbao/AssessmentItemManagement';
 import RuleManagement from './components/Dengbao/RuleManagement';
 import ProjectManagement from './components/Dengbao/ProjectManagement';
+import AssessmentTypeManagement from './components/Dengbao/AssessmentTypeManagement';
 // import './App.css';
 
 function App() {
@@ -79,7 +80,11 @@ function App() {
               <ProjectManagement />
             </ProtectedRoute>
           } />
-          
+          <Route path="/dengbao/assessment-types" element={
+            <ProtectedRoute requiredPage="dengbao:assessment-type">
+              <AssessmentTypeManagement />
+            </ProtectedRoute>
+          } />
           </Route>
         </Routes>
       </AuthProvider>

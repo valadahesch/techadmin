@@ -9,7 +9,7 @@ function Layout() {
   
   const [expandedMenus, setExpandedMenus] = useState({
     systemSettings: false,
-    dengbaoAssessment: false  // 新增：等保测评菜单状态
+    dengbaoAssessment: false  // 等保测评菜单状态
   });
   
   // 侧边栏收缩状态
@@ -23,15 +23,17 @@ function Layout() {
   };
 
   const toggleMenu = (menu) => {
-    if (sidebarCollapsed) return;
+    if (sidebarCollapsed) return; // 收缩时禁止展开子菜单
     setExpandedMenus(prev => ({
       ...prev,
       [menu]: !prev[menu]
     }));
   };
 
+  // 切换侧边栏收缩
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
+    // 收缩时自动收起所有子菜单
     if (!sidebarCollapsed) {
       setExpandedMenus({
         systemSettings: false,
@@ -40,10 +42,12 @@ function Layout() {
     }
   };
 
+  // 移动端打开侧边栏
   const openMobileSidebar = () => {
     setMobileSidebarOpen(true);
   };
 
+  // 移动端关闭侧边栏
   const closeMobileSidebar = () => {
     setMobileSidebarOpen(false);
   };
@@ -66,7 +70,10 @@ function Layout() {
   return (
     <div className={`layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       {/* 移动端菜单按钮 */}
-      <button className="mobile-menu-btn" onClick={openMobileSidebar}>
+      <button 
+        className="mobile-menu-btn" 
+        onClick={openMobileSidebar}
+      >
         ☰
       </button>
 
@@ -115,11 +122,12 @@ function Layout() {
             </Link>
           </li>
 
-          {/* 新增：等保测评 */}
+          {/* 等保测评 */}
           <li className="nav-item">
             <div 
               className={`nav-header ${isSubMenuActive([
                 '/dengbao/device-types',
+                '/dengbao/assessment-types',
                 '/dengbao/indicators',
                 '/dengbao/assessment-items',
                 '/dengbao/rules',
@@ -140,6 +148,11 @@ function Layout() {
                 <li>
                   <Link to="/dengbao/device-types" className={`sub-nav-link ${isActive('/dengbao/device-types') ? 'active' : ''}`} onClick={closeMobileSidebar}>
                     📱 设备类型管理
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/dengbao/assessment-types" className={`sub-nav-link ${isActive('/dengbao/assessment-types') ? 'active' : ''}`} onClick={closeMobileSidebar}>
+                    🏷️ 测评类型管理
                   </Link>
                 </li>
                 <li>
