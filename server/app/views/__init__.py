@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import Blueprint
-from app.views import auth, users, roles, permissions, leak_scan
+from app.views import auth, users, roles, permissions, leak_scan, device_usage
 
 
 def register_blueprints(app):
@@ -16,6 +16,7 @@ def register_blueprints(app):
     roles.init_role_routes(api_bp)
     permissions.init_permission_routes(api_bp)
     leak_scan.init_leak_scan_routes(api_bp)
+    device_usage.init_device_usage_routes(api_bp)
     
     # 如果有测评模块，取消下面的注释
     # from app.views import assessment

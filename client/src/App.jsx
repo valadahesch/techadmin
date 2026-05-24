@@ -8,7 +8,7 @@ import LeakScan from './components/LeakScan/LeakScan';
 import UserManagement from './components/SystemSettings/UserManagement';
 import RoleManagement from './components/SystemSettings/RoleManagement';
 import PermissionManagement from './components/SystemSettings/PermissionManagement';
-import DeviceTypeManagement from './components/Dengbao/DeviceTypeManagement';
+import DeviceUsageManagement from './components/Dengbao/DeviceUsageManagement';
 import IndicatorManagement from './components/Dengbao/IndicatorManagement';
 import AssessmentItemManagement from './components/Dengbao/AssessmentItemManagement';
 import RuleManagement from './components/Dengbao/RuleManagement';
@@ -55,9 +55,9 @@ function App() {
                 <PermissionManagement />
               </ProtectedRoute>
             } />
-          <Route path="/dengbao/device-types" element={
-            <ProtectedRoute requiredPage="dengbao:device">
-              <DeviceTypeManagement />
+          <Route path="/dengbao/device-usage" element={
+            <ProtectedRoute requiredPage="dengbao:device-usage">
+              <DeviceUsageManagement />
             </ProtectedRoute>
           } />
           <Route path="/dengbao/indicators" element={

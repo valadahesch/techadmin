@@ -345,3 +345,56 @@
   border-radius: 12px;
   font-size: 12px;
 }
+
+/* 分页样式 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 类别徽章 */
+.category-badge {
+  background: #e0e7ff;
+  color: #4338ca;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* 模态框大尺寸 */
+.modal-content.large {
+  width: 700px;
+  max-width: 90%;
+}
+
+/* 表格内加载/空状态 */
+.loading-cell, .empty-cell {
+  text-align: center;
+  padding: 48px;
+  color: #94a3b8;
+}

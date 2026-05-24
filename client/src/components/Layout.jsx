@@ -126,7 +126,7 @@ function Layout() {
           <li className="nav-item">
             <div 
               className={`nav-header ${isSubMenuActive([
-                '/dengbao/device-types',
+                '/dengbao/device-usage',
                 '/dengbao/assessment-types',
                 '/dengbao/indicators',
                 '/dengbao/assessment-items',
@@ -146,7 +146,7 @@ function Layout() {
             {!sidebarCollapsed && expandedMenus.dengbaoAssessment && (
               <ul className="sub-menu">
                 <li>
-                  <Link to="/dengbao/device-types" className={`sub-nav-link ${isActive('/dengbao/device-types') ? 'active' : ''}`} onClick={closeMobileSidebar}>
+                  <Link to="/dengbao/device-usage" className={`sub-nav-link ${isActive('/dengbao/device-usage') ? 'active' : ''}`} onClick={closeMobileSidebar}>
                     📱 设备用途管理
                   </Link>
                 </li>
