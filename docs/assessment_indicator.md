@@ -1,3 +1,459 @@
+# 测评指标管理接口文档
+
+## 1. 概述
+
+测评指标管理模块用于管理网络安全等级保护测评中的指标信息，支持指标的增删改查操作。
+
+### 1.1 基本信息
+
+- **基础URL**: `http://localhost:5000/api`
+- **认证方式**: JWT Token (Bearer Token)
+- **请求格式**: `application/json`
+- **响应格式**: `application/json`
+
+### 1.2 通用请求头
+
+```http
+Authorization: Bearer <access_token>
+Content-Type: application/json
+```
+
+---
+
+## 2. 接口列表
+
+| 接口名称 | 请求方式 | 接口路径 | 功能说明 |
+|---------|---------|---------|---------|
+| 获取指标列表 | GET | `/assessment-indicators` | 获取所有测评指标列表 |
+| 获取指标详情 | GET | `/assessment-indicators/{id}` | 根据ID获取单个指标详情 |
+| 新增指标 | POST | `/assessment-indicators` | 添加新的测评指标 |
+| 更新指标 | PUT | `/assessment-indicators/{id}` | 修改指标信息 |
+| 删除指标 | DELETE | `/assessment-indicators/{id}` | 删除指标 |
+
+---
+
+## 3. 数据模型
+
+### 3.1 指标类型枚举
+
+| 值 | 说明 |
+|---|------|
+| `checkbox` | 可选框类型（键值对配置） |
+| `string` | 字符串类型 |
+| `datetime` | 时间日期类型 |
+
+### 3.2 指标数据格式（仅checkbox类型）
+
+指标数据以JSON格式存储，为键值对形式：
+
+```json
+{
+  "passwordLength": "密码长度",
+  "loginFailCount": "登录失败次数",
+  "lockTime": "锁定时间"
+}
+```
+
+---
+
+## 4. 接口详细说明
+
+### 4.1 获取指标列表
+
+#### 接口描述
+获取所有测评指标列表，支持搜索和类型筛选。
+
+#### 请求信息
+
+| 项目 | 说明 |
+|-----|------|
+| 请求方式 | `GET` |
+| 接口路径 | `/assessment-indicators` |
+| 是否需要认证 | 是 |
+
+#### 请求参数（Query）
+
+| 参数名 | 类型 | 必填 | 说明 | 示例 |
+|-------|------|-----|------|------|
+| search | string | 否 | 搜索关键词（中文名称、英文名称） | `密码` |
+| indicator_type | string | 否 | 指标类型筛选 | `string` |
+
+#### 请求示例
+
+```http
+GET /api/assessment-indicators?search=密码&indicator_type=string HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### 响应示例
+
+**成功响应 (200 OK)**
+
+```json
+{
+  "items": [
+    {
+      "id": "a1b2c3d4e5f6g7h8i9j1",
+      "indicator_type": "string",
+      "name_cn": "密码长度",
+      "name_en": "passwordLength",
+      "indicator_data": null,
+      "created_by": 1,
+      "updated_by": 1,
+      "creator_name": "admin",
+      "updater_name": "admin",
+      "created_at": "2026-05-25T10:00:00",
+      "updated_at": "2026-05-25T10:00:00"
+    },
+    {
+      "id": "a1b2c3d4e5f6g7h8i9j2",
+      "indicator_type": "checkbox",
+      "name_cn": "安全配置项",
+      "name_en": "securityConfig",
+      "indicator_data": {
+        "ipsModule": "是否开启",
+        "avModule": "是否开启"
+      },
+      "created_by": 1,
+      "updated_by": 1,
+      "creator_name": "admin",
+      "updater_name": "admin",
+      "created_at": "2026-05-25T10:00:00",
+      "updated_at": "2026-05-25T10:00:00"
+    }
+  ],
+  "total": 48
+}
+```
+
+#### 响应字段说明
+
+| 字段 | 类型 | 说明 |
+|-----|------|------|
+| items | array | 指标列表 |
+| items[].id | string | 指标ID（20位UUID） |
+| items[].indicator_type | string | 指标类型（checkbox/string/datetime） |
+| items[].name_cn | string | 中文指标名称 |
+| items[].name_en | string | 英文指标名称 |
+| items[].indicator_data | object/null | 指标数据（仅checkbox类型有值） |
+| items[].created_by | int | 创建人ID |
+| items[].updated_by | int | 修改人ID |
+| items[].creator_name | string | 创建人名称 |
+| items[].updater_name | string | 修改人名称 |
+| items[].created_at | string | 创建时间 |
+| items[].updated_at | string | 更新时间 |
+| total | int | 总记录数 |
+
+---
+
+### 4.2 获取指标详情
+
+#### 接口描述
+根据指标ID获取单个指标的详细信息。
+
+#### 请求信息
+
+| 项目 | 说明 |
+|-----|------|
+| 请求方式 | `GET` |
+| 接口路径 | `/assessment-indicators/{id}` |
+| 是否需要认证 | 是 |
+
+#### 路径参数
+
+| 参数名 | 类型 | 必填 | 说明 | 示例 |
+|-------|------|-----|------|------|
+| id | string | 是 | 指标ID（20位UUID） | `a1b2c3d4e5f6g7h8i9j1` |
+
+#### 请求示例
+
+```http
+GET /api/assessment-indicators/a1b2c3d4e5f6g7h8i9j1 HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### 响应示例
+
+**成功响应 (200 OK)**
+
+```json
+{
+  "id": "a1b2c3d4e5f6g7h8i9j1",
+  "indicator_type": "string",
+  "name_cn": "密码长度",
+  "name_en": "passwordLength",
+  "indicator_data": null,
+  "created_by": 1,
+  "updated_by": 1,
+  "creator_name": "admin",
+  "updater_name": "admin",
+  "created_at": "2026-05-25T10:00:00",
+  "updated_at": "2026-05-25T10:00:00"
+}
+```
+
+**失败响应 (404 Not Found)**
+
+```json
+{
+  "error": "指标不存在"
+}
+```
+
+---
+
+### 4.3 新增指标
+
+#### 接口描述
+添加新的测评指标，ID由后端自动生成20位UUID。
+
+#### 请求信息
+
+| 项目 | 说明 |
+|-----|------|
+| 请求方式 | `POST` |
+| 接口路径 | `/assessment-indicators` |
+| 是否需要认证 | 是 |
+
+#### 请求参数（Body）
+
+| 参数名 | 类型 | 必填 | 说明 | 示例 |
+|-------|------|-----|------|------|
+| indicator_type | string | 是 | 指标类型 | `checkbox` |
+| name_cn | string | 是 | 中文指标名称 | `安全配置项` |
+| name_en | string | 否 | 英文指标名称 | `securityConfig` |
+| indicator_data | object | 否 | 指标数据（checkbox类型必填） | `{"ipsModule": "是否开启"}` |
+
+#### 请求示例
+
+**字符串类型指标**
+
+```http
+POST /api/assessment-indicators HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+  "indicator_type": "string",
+  "name_cn": "新指标名称",
+  "name_en": "newIndicator"
+}
+```
+
+**可选框类型指标**
+
+```http
+POST /api/assessment-indicators HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+  "indicator_type": "checkbox",
+  "name_cn": "安全配置项",
+  "name_en": "securityConfig",
+  "indicator_data": {
+    "ipsModule": "IPS模块是否开启",
+    "avModule": "AV模块是否开启"
+  }
+}
+```
+
+#### 响应示例
+
+**成功响应 (201 Created)**
+
+```json
+{
+  "id": "x1y2z3a4b5c6d7e8f9g0",
+  "indicator_type": "checkbox",
+  "name_cn": "安全配置项",
+  "name_en": "securityConfig",
+  "indicator_data": {
+    "ipsModule": "IPS模块是否开启",
+    "avModule": "AV模块是否开启"
+  },
+  "created_by": 1,
+  "updated_by": 1,
+  "creator_name": "admin",
+  "updater_name": "admin",
+  "created_at": "2026-05-25T10:30:00",
+  "updated_at": "2026-05-25T10:30:00"
+}
+```
+
+**失败响应 - 缺少必填字段 (400 Bad Request)**
+
+```json
+{
+  "error": "name_cn 不能为空"
+}
+```
+
+**失败响应 - 创建失败 (500 Internal Server Error)**
+
+```json
+{
+  "error": "创建失败"
+}
+```
+
+---
+
+### 4.4 更新指标
+
+#### 接口描述
+修改指定指标的配置信息。
+
+#### 请求信息
+
+| 项目 | 说明 |
+|-----|------|
+| 请求方式 | `PUT` |
+| 接口路径 | `/assessment-indicators/{id}` |
+| 是否需要认证 | 是 |
+
+#### 路径参数
+
+| 参数名 | 类型 | 必填 | 说明 | 示例 |
+|-------|------|-----|------|------|
+| id | string | 是 | 指标ID（20位UUID） | `a1b2c3d4e5f6g7h8i9j1` |
+
+#### 请求参数（Body）
+
+| 参数名 | 类型 | 必填 | 说明 | 示例 |
+|-------|------|-----|------|------|
+| indicator_type | string | 否 | 指标类型 | `checkbox` |
+| name_cn | string | 否 | 中文指标名称 | `更新后的名称` |
+| name_en | string | 否 | 英文指标名称 | `updatedName` |
+| indicator_data | object | 否 | 指标数据 | `{"newField": "新值"}` |
+
+#### 请求示例
+
+```http
+PUT /api/assessment-indicators/a1b2c3d4e5f6g7h8i9j1 HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+  "name_cn": "更新后的密码长度",
+  "indicator_data": {
+    "newField": "新配置项"
+  }
+}
+```
+
+#### 响应示例
+
+**成功响应 (200 OK)**
+
+```json
+{
+  "id": "a1b2c3d4e5f6g7h8i9j1",
+  "indicator_type": "string",
+  "name_cn": "更新后的密码长度",
+  "name_en": "passwordLength",
+  "indicator_data": {
+    "newField": "新配置项"
+  },
+  "created_by": 1,
+  "updated_by": 1,
+  "creator_name": "admin",
+  "updater_name": "admin",
+  "created_at": "2026-05-25T10:00:00",
+  "updated_at": "2026-05-25T10:35:00"
+}
+```
+
+**失败响应 - 指标不存在 (404 Not Found)**
+
+```json
+{
+  "error": "指标不存在"
+}
+```
+
+---
+
+### 4.5 删除指标
+
+#### 接口描述
+物理删除指定的测评指标。
+
+#### 请求信息
+
+| 项目 | 说明 |
+|-----|------|
+| 请求方式 | `DELETE` |
+| 接口路径 | `/assessment-indicators/{id}` |
+| 是否需要认证 | 是 |
+
+#### 路径参数
+
+| 参数名 | 类型 | 必填 | 说明 | 示例 |
+|-------|------|-----|------|------|
+| id | string | 是 | 指标ID（20位UUID） | `a1b2c3d4e5f6g7h8i9j1` |
+
+#### 请求示例
+
+```http
+DELETE /api/assessment-indicators/a1b2c3d4e5f6g7h8i9j1 HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### 响应示例
+
+**成功响应 (204 No Content)**
+
+无响应体
+
+**失败响应 (404 Not Found)**
+
+```json
+{
+  "error": "指标不存在"
+}
+```
+
+---
+
+## 5. 错误码说明
+
+| 状态码 | 说明 | 处理建议 |
+|-------|------|---------|
+| 200 | 请求成功 | - |
+| 201 | 创建成功 | - |
+| 204 | 删除成功 | - |
+| 400 | 请求参数错误 | 检查必填字段是否完整 |
+| 401 | 未授权 | 检查Token是否有效或已过期 |
+| 404 | 资源不存在 | 检查请求的ID是否正确 |
+| 500 | 服务器内部错误 | 联系后端开发人员 |
+
+---
+
+## 6. 预置数据说明
+
+系统预置了48条测评指标数据，指标类型均为`string`，包含以下类别的指标：
+
+| 类别 | 指标示例 |
+|-----|---------|
+| 密码安全 | 密码长度、密码有效期、登录失败次数等 |
+| 管理员配置 | 系统管理员、安全管理员、审计管理员等 |
+| 日志审计 | 日志功能、备份模式、备份周期等 |
+| 数据备份 | 备份方式、备份周期、异地备份等 |
+| IPS/AV模块 | 模块开关、更新模式、版本等 |
+| 加密算法 | 保密性算法、完整性算法等 |
+| 其他配置 | 部署模式、可信验证、二次验证等 |
+
+---
+
+## 7. 数据库及初始化数据
+
 ```sql
 CREATE TABLE assessment_indicator (
     id VARCHAR(20) PRIMARY KEY COMMENT '20位UUID主键',
