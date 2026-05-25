@@ -11,17 +11,13 @@ function DeviceUsageManagement() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterMandatory, setFilterMandatory] = useState('');
+  
+  // 分页相关状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
 
-  // 设备类型选项
-  const deviceTypes = [
-    '网络设备',
-    '安全设备',
-    '电力专用-安全设备',
-    '阿里云',
-    '华为云',
-    '京东云',
-    '系统管理平台'
-  ];
+  // 设备类型选项（从后端数据动态获取）
+  const [deviceTypes, setDeviceTypes] = useState([]);
 
   // 获取 token
   const getToken = () => localStorage.getItem('access_token');
@@ -31,17 +27,7 @@ function DeviceUsageManagement() {
     setLoading(true);
     try {
       const token = getToken();
-      const params = new URLSearchParams();
-      if (searchKeyword) params.append('search', searchKeyword);
-      if (filterCategory) params.append('category', filterCategory);
-      if (filterMandatory) params.append('is_mandatory', filterMandatory);
-      
-      let url = 'http://localhost:5000/api/device-usage';
-      if (params.toString()) {
-        url = url + '?' + params.toString();
-      }
-      
-      const response = await fetch(url, {
+      const response = await fetch('http://localhost:5000/api/device-usage', {
         method: 'GET',
         headers: {
           'Authorization': 'Bearer ' + token,
@@ -57,6 +43,10 @@ function DeviceUsageManagement() {
       if (response.ok) {
         const data = await response.json();
         setDevices(data.items || []);
+        
+        // 从后端数据动态提取设备类型
+        const types = [...new Set(data.items.map(item => item.device_type).filter(t => t))];
+        setDeviceTypes(types);
       } else {
         console.error('获取数据失败:', response.status);
       }
@@ -69,7 +59,44 @@ function DeviceUsageManagement() {
 
   useEffect(() => {
     fetchDevices();
-  }, [searchKeyword, filterCategory, filterMandatory]);
+  }, []);
+
+  // 前端筛选数据
+  const getFilteredDevices = () => {
+    let filtered = [...devices];
+    
+    // 搜索筛选
+    if (searchKeyword) {
+      filtered = filtered.filter(item => 
+        item.device_name.includes(searchKeyword) ||
+        item.device_type.includes(searchKeyword) ||
+        item.function_cn.includes(searchKeyword)
+      );
+    }
+    
+    // 设备类型筛选
+    if (filterCategory) {
+      filtered = filtered.filter(item => item.device_type === filterCategory);
+    }
+    
+    // 是否必测筛选
+    if (filterMandatory) {
+      filtered = filtered.filter(item => item.is_mandatory === filterMandatory);
+    }
+    
+    return filtered;
+  };
+
+  // 前端分页
+  const getPaginatedDevices = () => {
+    const filtered = getFilteredDevices();
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return {
+      items: filtered.slice(startIndex, endIndex),
+      total: filtered.length
+    };
+  };
 
   const handleDelete = async (id) => {
     if (window.confirm('确定要删除这条设备信息吗？')) {
@@ -84,6 +111,14 @@ function DeviceUsageManagement() {
         
         if (response.ok) {
           fetchDevices();
+          // 如果当前页没有数据了，回到上一页
+          const filtered = getFilteredDevices();
+          const newTotalPages = Math.ceil((filtered.length - 1) / pageSize);
+          if (currentPage > newTotalPages && newTotalPages > 0) {
+            setCurrentPage(newTotalPages);
+          } else if (newTotalPages === 0) {
+            setCurrentPage(1);
+          }
         } else {
           const error = await response.json();
           alert(error.error || '删除失败');
@@ -138,14 +173,98 @@ function DeviceUsageManagement() {
     }
   };
 
+  // 筛选条件变化时重置到第一页
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchKeyword, filterCategory, filterMandatory]);
+
   // 统计数据
-  const mandatoryCount = devices.filter(function(d) { return d.is_mandatory === '是'; }).length;
-  const notMandatoryCount = devices.filter(function(d) { return d.is_mandatory === '否'; }).length;
+  const filteredDevices = getFilteredDevices();
+  const paginatedData = getPaginatedDevices();
+  const totalPages = Math.ceil(filteredDevices.length / pageSize);
+  
+  const mandatoryCount = filteredDevices.filter(function(d) { return d.is_mandatory === '是'; }).length;
+  const notMandatoryCount = filteredDevices.filter(function(d) { return d.is_mandatory === '否'; }).length;
   
   const stats = {
-    total: devices.length,
+    total: filteredDevices.length,
     mandatory: mandatoryCount,
     notMandatory: notMandatoryCount
+  };
+
+  // 分页按钮生成
+  const renderPaginationButtons = () => {
+    const buttons = [];
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    
+    if (endPage - startPage + 1 < maxVisible) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+    
+    // 上一页按钮
+    buttons.push(
+      <button 
+        key="prev"
+        onClick={() => setCurrentPage(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="pagination-btn"
+      >
+        上一页
+      </button>
+    );
+    
+    // 第一页
+    if (startPage > 1) {
+      buttons.push(
+        <button key={1} onClick={() => setCurrentPage(1)} className="pagination-btn">
+          1
+        </button>
+      );
+      if (startPage > 2) {
+        buttons.push(<span key="dots1" className="pagination-dots">...</span>);
+      }
+    }
+    
+    // 中间页码
+    for (let i = startPage; i <= endPage; i++) {
+      buttons.push(
+        <button 
+          key={i}
+          onClick={() => setCurrentPage(i)}
+          className={'pagination-btn ' + (currentPage === i ? 'active' : '')}
+        >
+          {i}
+        </button>
+      );
+    }
+    
+    // 最后一页
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        buttons.push(<span key="dots2" className="pagination-dots">...</span>);
+      }
+      buttons.push(
+        <button key={totalPages} onClick={() => setCurrentPage(totalPages)} className="pagination-btn">
+          {totalPages}
+        </button>
+      );
+    }
+    
+    // 下一页按钮
+    buttons.push(
+      <button 
+        key="next"
+        onClick={() => setCurrentPage(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="pagination-btn"
+      >
+        下一页
+      </button>
+    );
+    
+    return buttons;
   };
 
   return (
@@ -223,10 +342,10 @@ function DeviceUsageManagement() {
           <tbody>
             {loading ? (
               <tr><td colSpan="7" className="loading-cell">加载中...</td></tr>
-            ) : devices.length === 0 ? (
+            ) : paginatedData.items.length === 0 ? (
               <tr><td colSpan="7" className="empty-cell">暂无数据</td></tr>
             ) : (
-              devices.map(function(item) {
+              paginatedData.items.map(function(item) {
                 return (
                   <tr key={item.id}>
                     <td>{item.serial_no}</td>
@@ -258,6 +377,18 @@ function DeviceUsageManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* 分页组件 */}
+      {!loading && totalPages > 1 && (
+        <div className="pagination-container">
+          <div className="pagination-info">
+            显示第 {(currentPage - 1) * pageSize + 1} 到 {Math.min(currentPage * pageSize, filteredDevices.length)} 条，共 {filteredDevices.length} 条记录
+          </div>
+          <div className="pagination-buttons">
+            {renderPaginationButtons()}
+          </div>
+        </div>
+      )}
 
       {/* 新增/编辑模态框 */}
       {showModal && (
