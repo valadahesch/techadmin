@@ -1,7 +1,7 @@
 # server/app/views/device_usage.py
 # -*- coding: utf-8 -*-
 
-from flask import request, jsonify
+from flask import request, jsonify, g
 from app.repositories.device_usage_repo import device_usage_repo
 from app.decorators import api_permission_required
 
@@ -22,6 +22,8 @@ def init_device_usage_routes(bp):
             is_mandatory=is_mandatory if is_mandatory else None
         )
         
+        print(f"查询参数 - search: {search}, category: {category}, is_mandatory: {is_mandatory}")
+        print(f"查询结果: {result}")
         return jsonify(result), 200
     
     @bp.route('/device-usage/<device_id>', methods=['GET'])
@@ -32,7 +34,7 @@ def init_device_usage_routes(bp):
         if not device:
             return jsonify({'error': '设备信息不存在'}), 404
         
-        return jsonify(device.to_dict()), 200
+        return jsonify(device), 200
     
     @bp.route('/device-usage', methods=['POST'])
     @api_permission_required()
@@ -46,18 +48,25 @@ def init_device_usage_routes(bp):
             if not data.get(field):
                 return jsonify({'error': f'{field} 不能为空'}), 400
         
-        device = device_usage_repo.create(data)
+        # 获取当前用户ID（从token中获取）
+        current_user_id = getattr(g, 'current_user_id', None)
+        
+        device = device_usage_repo.create(data, current_user_id)
         if not device:
             return jsonify({'error': '序号已存在'}), 409
         
-        return jsonify(device.to_dict()), 201
+        return jsonify(device), 201
     
     @bp.route('/device-usage/<device_id>', methods=['PUT'])
     @api_permission_required()
     def update_device_usage(device_id):
         """更新设备用途"""
         data = request.get_json()
-        device = device_usage_repo.update(device_id, data)
+        
+        # 获取当前用户ID（从token中获取）
+        current_user_id = getattr(g, 'current_user_id', None)
+        
+        device = device_usage_repo.update(device_id, data, current_user_id)
         
         if not device:
             existing = device_usage_repo.get_by_id(device_id)
@@ -65,7 +74,7 @@ def init_device_usage_routes(bp):
                 return jsonify({'error': '设备信息不存在'}), 404
             return jsonify({'error': '序号已存在'}), 409
         
-        return jsonify(device.to_dict()), 200
+        return jsonify(device), 200
     
     @bp.route('/device-usage/<device_id>', methods=['DELETE'])
     @api_permission_required()
@@ -85,8 +94,11 @@ def init_device_usage_routes(bp):
         if not devices_data:
             return jsonify({'error': '设备列表不能为空'}), 400
         
-        devices = device_usage_repo.batch_create(devices_data)
-        return jsonify([d.to_dict() for d in devices]), 201
+        # 获取当前用户ID（从token中获取）
+        current_user_id = getattr(g, 'current_user_id', None)
+        
+        devices = device_usage_repo.batch_create(devices_data, current_user_id)
+        return jsonify(devices), 201
     
     @bp.route('/device-usage/device-types', methods=['GET'])
     @api_permission_required()

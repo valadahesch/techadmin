@@ -16,6 +16,9 @@ def permission_required(permission_code):
             current_user_id_str = get_jwt_identity()
             current_user_id = int(current_user_id_str)
             
+            # 将当前用户ID存入g对象，供后续使用
+            g.current_user_id = current_user_id
+            
             user = user_repo.get_by_id(current_user_id)
             if not user or not user.is_active:
                 return jsonify({
@@ -52,6 +55,10 @@ def api_permission_required():
                 verify_jwt_in_request()
                 user_id_str = get_jwt_identity()
                 user_id = int(user_id_str)
+                
+                # 将当前用户ID存入g对象，供后续使用
+                g.current_user_id = user_id
+                
             except Exception as e:
                 return jsonify({
                     'error': '未登录或登录已过期',
@@ -78,3 +85,8 @@ def api_permission_required():
             return fn(*args, **kwargs)
         return wrapper
     return decorator
+
+
+def get_current_user_id():
+    """获取当前登录用户ID的工具函数"""
+    return getattr(g, 'current_user_id', None)

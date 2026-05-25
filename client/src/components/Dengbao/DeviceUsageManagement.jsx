@@ -1,7 +1,6 @@
 // client/src/components/Dengbao/DeviceUsageManagement.jsx
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../../styles/Dengbao/DeviceUsageManagement.css';
-
 
 function DeviceUsageManagement() {
   const [devices, setDevices] = useState([]);
@@ -20,14 +19,33 @@ function DeviceUsageManagement() {
   const [deviceTypes, setDeviceTypes] = useState([]);
 
   // 获取 token
-  const getToken = () => localStorage.getItem('access_token');
+  const getToken = () => {
+    return localStorage.getItem('access_token');
+  };
 
   // 获取数据
   const fetchDevices = async () => {
     setLoading(true);
     try {
       const token = getToken();
-      const response = await fetch('http://localhost:5000/api/device-usage', {
+      let url = 'http://localhost:5000/api/device-usage';
+      const params = [];
+      
+      if (searchKeyword) {
+        params.push('search=' + encodeURIComponent(searchKeyword));
+      }
+      if (filterCategory) {
+        params.push('category=' + encodeURIComponent(filterCategory));
+      }
+      if (filterMandatory) {
+        params.push('is_mandatory=' + encodeURIComponent(filterMandatory));
+      }
+      
+      if (params.length > 0) {
+        url = url + '?' + params.join('&');
+      }
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Authorization': 'Bearer ' + token,
@@ -45,7 +63,15 @@ function DeviceUsageManagement() {
         setDevices(data.items || []);
         
         // 从后端数据动态提取设备类型
-        const types = [...new Set(data.items.map(item => item.device_type).filter(t => t))];
+        const types = [];
+        const typeSet = {};
+        for (let i = 0; i < data.items.length; i++) {
+          const type = data.items[i].device_type;
+          if (type && !typeSet[type]) {
+            typeSet[type] = true;
+            types.push(type);
+          }
+        }
         setDeviceTypes(types);
       } else {
         console.error('获取数据失败:', response.status);
@@ -59,7 +85,7 @@ function DeviceUsageManagement() {
 
   useEffect(() => {
     fetchDevices();
-  }, []);
+  }, [searchKeyword, filterCategory, filterMandatory]);
 
   // 前端筛选数据
   const getFilteredDevices = () => {
@@ -70,7 +96,7 @@ function DeviceUsageManagement() {
       filtered = filtered.filter(item => 
         item.device_name.includes(searchKeyword) ||
         item.device_type.includes(searchKeyword) ||
-        item.function_cn.includes(searchKeyword)
+        (item.function_cn && item.function_cn.includes(searchKeyword))
       );
     }
     
@@ -102,7 +128,7 @@ function DeviceUsageManagement() {
     if (window.confirm('确定要删除这条设备信息吗？')) {
       try {
         const token = getToken();
-        const response = await fetch('http://localhost:5000/api/device-usage/' + id, {
+        const response = await fetch(`http://localhost:5000/api/device-usage/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': 'Bearer ' + token
@@ -137,7 +163,7 @@ function DeviceUsageManagement() {
       let method = 'POST';
       
       if (editingItem) {
-        url = 'http://localhost:5000/api/device-usage/' + editingItem.id;
+        url = `http://localhost:5000/api/device-usage/${editingItem.id}`;
         method = 'PUT';
       }
       
@@ -183,8 +209,8 @@ function DeviceUsageManagement() {
   const paginatedData = getPaginatedDevices();
   const totalPages = Math.ceil(filteredDevices.length / pageSize);
   
-  const mandatoryCount = filteredDevices.filter(function(d) { return d.is_mandatory === '是'; }).length;
-  const notMandatoryCount = filteredDevices.filter(function(d) { return d.is_mandatory === '否'; }).length;
+  const mandatoryCount = filteredDevices.filter(d => d.is_mandatory === '是').length;
+  const notMandatoryCount = filteredDevices.filter(d => d.is_mandatory === '否').length;
   
   const stats = {
     total: filteredDevices.length,
@@ -233,7 +259,7 @@ function DeviceUsageManagement() {
         <button 
           key={i}
           onClick={() => setCurrentPage(i)}
-          className={'pagination-btn ' + (currentPage === i ? 'active' : '')}
+          className={`pagination-btn ${currentPage === i ? 'active' : ''}`}
         >
           {i}
         </button>
@@ -310,9 +336,9 @@ function DeviceUsageManagement() {
           className="filter-select"
         >
           <option value="">全部分类</option>
-          {deviceTypes.map(function(type) {
-            return <option key={type} value={type}>{type}</option>;
-          })}
+          {deviceTypes.map(type => (
+            <option key={type} value={type}>{type}</option>
+          ))}
         </select>
         <select 
           value={filterMandatory} 
@@ -336,43 +362,49 @@ function DeviceUsageManagement() {
               <th>功能</th>
               <th>是否必测</th>
               <th>状态</th>
+              <th>创建人</th>
+              <th>修改人</th>
               <th>操作</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="7" className="loading-cell">加载中...</td></tr>
+              <tr>
+                <td colSpan="9" className="loading-cell">加载中...</td>
+              </tr>
             ) : paginatedData.items.length === 0 ? (
-              <tr><td colSpan="7" className="empty-cell">暂无数据</td></tr>
+              <tr>
+                <td colSpan="9" className="empty-cell">暂无数据</td>
+              </tr>
             ) : (
-              paginatedData.items.map(function(item) {
-                return (
-                  <tr key={item.id}>
-                    <td>{item.serial_no}</td>
-                    <td>{item.device_type}</td>
-                    <td><strong>{item.device_name}</strong></td>
-                    <td className="desc-cell" title={item.function_cn}>{item.function_cn}</td>
-                    <td>
-                      <span className={'status-badge ' + (item.is_mandatory === '是' ? 'status-active' : 'status-inactive')}>
-                        {item.is_mandatory}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={'status-badge ' + (item.status === '启用' ? 'status-active' : 'status-inactive')}>
-                        {item.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="btn-edit" onClick={() => { setEditingItem(item); setShowModal(true); }}>
-                        编辑
-                      </button>
-                      <button className="btn-delete" onClick={() => handleDelete(item.id)}>
-                        删除
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
+              paginatedData.items.map(item => (
+                <tr key={item.id}>
+                  <td>{item.serial_no}</td>
+                  <td>{item.device_type}</td>
+                  <td><strong>{item.device_name}</strong></td>
+                  <td className="desc-cell" title={item.function_cn}>{item.function_cn}</td>
+                  <td>
+                    <span className={`status-badge ${item.is_mandatory === '是' ? 'status-active' : 'status-inactive'}`}>
+                      {item.is_mandatory}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`status-badge ${item.status === '启用' ? 'status-active' : 'status-inactive'}`}>
+                      {item.status}
+                    </span>
+                  </td>
+                  <td>{item.creator_name || '-'}</td>
+                  <td>{item.updater_name || '-'}</td>
+                  <td>
+                    <button className="btn-edit" onClick={() => { setEditingItem(item); setShowModal(true); }}>
+                      编辑
+                    </button>
+                    <button className="btn-delete" onClick={() => handleDelete(item.id)}>
+                      删除
+                    </button>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -403,6 +435,7 @@ function DeviceUsageManagement() {
   );
 }
 
+// 模态框组件
 function DeviceUsageModal({ item, onSave, onClose, deviceTypes }) {
   const defaultFormData = {
     serial_no: '',
@@ -413,8 +446,7 @@ function DeviceUsageModal({ item, onSave, onClose, deviceTypes }) {
     status: '启用'
   };
   
-  const initialState = item || defaultFormData;
-  const [formData, setFormData] = useState(initialState);
+  const [formData, setFormData] = useState(item || defaultFormData);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -439,9 +471,9 @@ function DeviceUsageModal({ item, onSave, onClose, deviceTypes }) {
                 required
               >
                 <option value="">请选择</option>
-                {deviceTypes.map(function(type) {
-                  return <option key={type} value={type}>{type}</option>;
-                })}
+                {deviceTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
               </select>
             </div>
           </div>
