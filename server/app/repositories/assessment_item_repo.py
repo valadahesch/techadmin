@@ -15,6 +15,9 @@ class AssessmentItemRepository:
     def __init__(self):
         self.model = AssessmentItem
     
+# server/app/repositories/assessment_item_repo.py
+# 修改 get_all 方法中的排序部分
+
     def get_all(self, page=1, per_page=10, standard_type=None, assessment_level=None, search=None):
         """获取所有测评项列表（分页）"""
         creator_alias = aliased(User)
@@ -48,8 +51,8 @@ class AssessmentItemRepository:
                 )
             )
         
-        # 按创建时间倒序
-        query = query.order_by(self.model.created_at.desc())
+        # 按修改时间降序排序（最新修改的在前）
+        query = query.order_by(self.model.updated_at.desc())
         
         # 分页
         paginated = query.paginate(page=page, per_page=per_page, error_out=False)

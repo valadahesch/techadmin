@@ -51,7 +51,7 @@ function AssessmentItemManagement() {
     }
   };
 
-  // 获取测评项列表
+  // 获取测评项列表（按修改时间降序）
   const fetchItems = async () => {
     setLoading(true);
     try {
@@ -275,14 +275,15 @@ function AssessmentItemManagement() {
               <th>测评指标</th>
               <th>测评等级</th>
               <th>创建人</th>
+              <th>修改人</th>
               <th>操作</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="8" className="loading-cell">加载中...</td></tr>
+              <tr><td colSpan="9" className="loading-cell">加载中...</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan="8" className="empty-cell">暂无数据</td></tr>
+              <tr><td colSpan="9" className="empty-cell">暂无数据</td></tr>
             ) : (
               items.map(item => (
                 <tr key={item.id}>
@@ -300,7 +301,8 @@ function AssessmentItemManagement() {
                       <span key={level} className="level-tag">{level}</span>
                     ))}
                   </td>
-                  <td>{item.creator_name || '-'}</td>
+                  <td><span className="user-name">{item.creator_name || '-'}</span></td>
+                  <td><span className="user-name">{item.updater_name || '-'}</span></td>
                   <td>
                     <button className="btn-edit" onClick={() => { setEditingItem(item); setShowModal(true); }}>编辑</button>
                     <button className="btn-delete" onClick={() => handleDelete(item.id, item.security_control)}>删除</button>
@@ -339,15 +341,15 @@ function AssessmentItemManagement() {
   );
 }
 
-// 多选组件（用于测评指标和测评等级）
+// 优化后的多选组件
 function MultiSelect({ options, value, onChange, placeholder, displayKey = 'name_cn', valueKey = 'id' }) {
   const [isOpen, setIsOpen] = useState(false);
   const [customValue, setCustomValue] = useState('');
 
-  const selectedSet = new Set(value);
+  const selectedSet = new Set(value || []);
 
   const toggleOption = (optionValue) => {
-    const newValue = [...value];
+    const newValue = [...(value || [])];
     if (selectedSet.has(optionValue)) {
       const index = newValue.indexOf(optionValue);
       newValue.splice(index, 1);
@@ -358,14 +360,15 @@ function MultiSelect({ options, value, onChange, placeholder, displayKey = 'name
   };
 
   const addCustomValue = () => {
-    if (customValue && !selectedSet.has(customValue)) {
-      onChange([...value, customValue]);
+    if (customValue && customValue.trim() && !selectedSet.has(customValue.trim())) {
+      onChange([...(value || []), customValue.trim()]);
       setCustomValue('');
     }
   };
 
-  const removeValue = (val) => {
-    const newValue = value.filter(v => v !== val);
+  const removeValue = (val, e) => {
+    e.stopPropagation();
+    const newValue = (value || []).filter(v => v !== val);
     onChange(newValue);
   };
 
@@ -373,13 +376,16 @@ function MultiSelect({ options, value, onChange, placeholder, displayKey = 'name
     <div className="multi-select">
       <div className="multi-select-header" onClick={() => setIsOpen(!isOpen)}>
         <div className="selected-tags">
-          {value.map(val => (
-            <span key={val} className="selected-tag">
-              {val}
-              <button type="button" onClick={(e) => { e.stopPropagation(); removeValue(val); }}>×</button>
-            </span>
-          ))}
-          {value.length === 0 && <span className="placeholder">{placeholder}</span>}
+          {(value || []).length === 0 ? (
+            <span className="placeholder">{placeholder}</span>
+          ) : (
+            (value || []).map(val => (
+              <span key={val} className="selected-tag">
+                {val}
+                <button type="button" onClick={(e) => removeValue(val, e)}>×</button>
+              </span>
+            ))
+          )}
         </div>
         <span className="arrow">{isOpen ? '▲' : '▼'}</span>
       </div>
@@ -390,21 +396,23 @@ function MultiSelect({ options, value, onChange, placeholder, displayKey = 'name
               type="text" 
               value={customValue} 
               onChange={(e) => setCustomValue(e.target.value)}
-              placeholder="输入自定义值..."
+              placeholder="输入自定义值，点击添加..."
+              onKeyPress={(e) => e.key === 'Enter' && addCustomValue()}
             />
             <button type="button" onClick={addCustomValue}>添加</button>
           </div>
           <div className="options-list">
             {options.map(opt => {
-              const optValue = displayKey === 'name_cn' ? opt[displayKey] : opt[valueKey];
+              const optValue = opt[displayKey] || opt;
+              const isChecked = selectedSet.has(optValue);
               return (
-                <label key={optValue} className="option-item">
+                <label key={optValue} className="option-item" onClick={(e) => e.stopPropagation()}>
                   <input
                     type="checkbox"
-                    checked={selectedSet.has(optValue)}
+                    checked={isChecked}
                     onChange={() => toggleOption(optValue)}
                   />
-                  <span>{opt[displayKey] || opt}</span>
+                  <span>{optValue}</span>
                 </label>
               );
             })}
@@ -465,7 +473,7 @@ function AssessmentItemModal({ item, onSave, onClose, standardTypeOptions, level
                     setCustomStandardType(e.target.value);
                     setFormData({ ...formData, standard_type: e.target.value });
                   }}
-                  className="custom-input"
+                  className="custom-input-mt"
                   required
                 />
               )}
@@ -519,6 +527,8 @@ function AssessmentItemModal({ item, onSave, onClose, standardTypeOptions, level
                 value={formData.assessment_levels}
                 onChange={(val) => setFormData({ ...formData, assessment_levels: val })}
                 placeholder="请选择测评等级"
+                displayKey="name_cn"
+                valueKey="name_cn"
               />
             </div>
           </div>
