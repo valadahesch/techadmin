@@ -1,5 +1,6 @@
 # server/app/repositories/device_usage_repo.py
 # -*- coding: utf-8 -*-
+
 from app.models.base import db
 from app.models.device_usage import DeviceUsage
 from sqlalchemy import or_
@@ -53,14 +54,29 @@ class DeviceUsageRepository:
         """根据序号获取设备用途"""
         return self.model.query.filter_by(serial_no=serial_no).first()
     
+    def _generate_unique_id(self):
+        """生成唯一的20位UUID"""
+        while True:
+            # 创建临时实例来调用方法
+            temp_device = self.model()
+            new_id = temp_device.generate_uuid20()
+            # 检查数据库中是否已存在
+            existing = self.get_by_id(new_id)
+            if not existing:
+                return new_id
+    
     def create(self, data):
-        """创建设备用途"""
+        """创建设备用途（ID由后端自动生成）"""
         # 检查序号是否已存在
         existing = self.get_by_serial_no(data.get('serial_no'))
         if existing:
             return None
         
+        # 生成唯一的20位UUID
+        new_id = self._generate_unique_id()
+        
         device = self.model(
+            id=new_id,
             serial_no=data.get('serial_no'),
             device_type=data.get('device_type'),
             device_name=data.get('device_name'),
@@ -124,7 +140,11 @@ class DeviceUsageRepository:
         """批量创建设备用途"""
         devices = []
         for data in devices_data:
+            # 生成唯一的20位UUID
+            new_id = self._generate_unique_id()
+            
             device = self.model(
+                id=new_id,
                 serial_no=data.get('serial_no'),
                 device_type=data.get('device_type'),
                 device_name=data.get('device_name'),

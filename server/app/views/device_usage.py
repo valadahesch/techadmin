@@ -24,7 +24,7 @@ def init_device_usage_routes(bp):
         
         return jsonify(result), 200
     
-    @bp.route('/device-usage/<int:device_id>', methods=['GET'])
+    @bp.route('/device-usage/<device_id>', methods=['GET'])
     @api_permission_required()
     def get_device_usage(device_id):
         """获取单个设备用途详情"""
@@ -37,7 +37,7 @@ def init_device_usage_routes(bp):
     @bp.route('/device-usage', methods=['POST'])
     @api_permission_required()
     def create_device_usage():
-        """创建设备用途"""
+        """创建设备用途（ID由后端自动生成）"""
         data = request.get_json()
         
         # 验证必填字段
@@ -52,7 +52,7 @@ def init_device_usage_routes(bp):
         
         return jsonify(device.to_dict()), 201
     
-    @bp.route('/device-usage/<int:device_id>', methods=['PUT'])
+    @bp.route('/device-usage/<device_id>', methods=['PUT'])
     @api_permission_required()
     def update_device_usage(device_id):
         """更新设备用途"""
@@ -67,7 +67,7 @@ def init_device_usage_routes(bp):
         
         return jsonify(device.to_dict()), 200
     
-    @bp.route('/device-usage/<int:device_id>', methods=['DELETE'])
+    @bp.route('/device-usage/<device_id>', methods=['DELETE'])
     @api_permission_required()
     def delete_device_usage(device_id):
         """删除设备用途（软删除）"""
