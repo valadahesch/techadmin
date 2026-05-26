@@ -9,25 +9,51 @@ from app.decorators import api_permission_required
 def init_assessment_item_routes(bp):
     """初始化测评项管理相关路由"""
     
-    # @bp.route('/assessment-items', methods=['GET'])
-    # @api_permission_required()
-    # def get_assessment_items():
-    #     """获取测评项列表（分页）"""
-    #     page = request.args.get('page', 1, type=int)
-    #     per_page = request.args.get('per_page', 10, type=int)
-    #     standard_type = request.args.get('standard_type', '')
-    #     assessment_level = request.args.get('assessment_level', '')
-    #     search = request.args.get('search', '')
+    @bp.route('/assessment-items/<item_id>/rules', methods=['GET'])
+    @api_permission_required()
+    def get_item_rules(item_id):
+        """获取测评项的规则数据"""
+        item = assessment_item_repo.get_by_id(item_id)
+        if not item:
+            return jsonify({'error': '测评项不存在'}), 404
         
-    #     result = assessment_item_repo.get_all(
-    #         page=page,
-    #         per_page=per_page,
-    #         standard_type=standard_type if standard_type else None,
-    #         assessment_level=assessment_level if assessment_level else None,
-    #         search=search if search else None
-    #     )
+        # 获取规则数据，如果没有则返回空数组
+        rules_data = item.get('rules_data', [])
         
-    #     return jsonify(result), 200
+        # 获取测评项基本信息用于展示
+        item_info = {
+            'id': item.get('id'),
+            'standard_type': item.get('standard_type'),
+            'security_control': item.get('security_control'),
+            'assessment_object': item.get('assessment_object'),
+            'detection_item': item.get('detection_item'),
+            'assessment_indicators': item.get('assessment_indicators', [])
+        }
+        
+        return jsonify({
+            'rules_data': rules_data,
+            'item_info': item_info
+        }), 200
+    
+    @bp.route('/assessment-items/<item_id>/rules', methods=['POST'])
+    @api_permission_required()
+    def update_item_rules(item_id):
+        """更新测评项的规则数据"""
+        data = request.get_json()
+        current_user_id = getattr(g, 'current_user_id', None)
+        
+        if current_user_id is None:
+            return jsonify({'error': '无法获取当前用户信息'}), 401
+        
+        rules_data = data.get('rules_data', [])
+        
+        # 通过Repository更新规则数据
+        updated_item = assessment_item_repo.update_rules_data(item_id, rules_data, current_user_id)
+        
+        if not updated_item:
+            return jsonify({'error': '测评项不存在'}), 404
+        
+        return jsonify({'success': True, 'message': '规则保存成功'}), 200
     
     @bp.route('/assessment-items/<item_id>', methods=['GET'])
     @api_permission_required()

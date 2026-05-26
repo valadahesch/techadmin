@@ -1,6 +1,7 @@
 // client/src/components/Dengbao/AssessmentItemManagement.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import '../../styles/Dengbao/AssessmentItemManagement.css';
+import RuleManagerModal from './RuleManagerModal';
 
 function AssessmentItemManagement() {
   const [items, setItems] = useState([]);
@@ -8,6 +9,10 @@ function AssessmentItemManagement() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  
+  // 规则管理弹窗状态
+  const [showRuleModal, setShowRuleModal] = useState(false);
+  const [currentRuleItem, setCurrentRuleItem] = useState(null);
   
   // 悬浮提示状态
   const [tooltipVisible, setTooltipVisible] = useState(false);
@@ -59,6 +64,12 @@ function AssessmentItemManagement() {
   const [totalPages, setTotalPages] = useState(0);
 
   const getToken = () => localStorage.getItem('access_token');
+
+  // 打开规则管理弹窗
+  const openRuleManager = (itemId, itemName) => {
+    setCurrentRuleItem({ id: itemId, name: itemName });
+    setShowRuleModal(true);
+  };
 
   // 鼠标悬浮显示指标详情
   const handleMouseEnter = (event, indicators) => {
@@ -506,7 +517,7 @@ function AssessmentItemManagement() {
                   )}
                 </th>
               ))}
-              <th style={{ width: '120px' }}>操作</th>
+              <th style={{ width: '160px' }}>操作</th>
             </tr>
           </thead>
           <tbody>
@@ -547,8 +558,15 @@ function AssessmentItemManagement() {
                   {visibleColumns.created_at && <td>{item.created_at ? new Date(item.created_at).toLocaleString() : '-'}</td>}
                   {visibleColumns.updated_at && <td>{item.updated_at ? new Date(item.updated_at).toLocaleString() : '-'}</td>}
                   <td>
-                    <button className="btn-edit" onClick={() => { setEditingItem(item); setShowModal(true); }}>编辑</button>
-                    <button className="btn-delete" onClick={() => handleDelete(item.id, item.security_control)}>删除</button>
+                    <button className="btn-rule" onClick={() => openRuleManager(item.id, item.security_control)}>
+                      规则
+                    </button>
+                    <button className="btn-edit" onClick={() => { setEditingItem(item); setShowModal(true); }}>
+                      编辑
+                    </button>
+                    <button className="btn-delete" onClick={() => handleDelete(item.id, item.security_control)}>
+                      删除
+                    </button>
                   </td>
                 </tr>
               ))
@@ -603,6 +621,19 @@ function AssessmentItemManagement() {
           standardTypeOptions={filterOptions.standard_types}
           levelOptions={filterOptions.assessment_levels}
           indicators={indicators}
+        />
+      )}
+
+      {/* 规则管理弹窗 */}
+      {showRuleModal && currentRuleItem && (
+        <RuleManagerModal
+          itemId={currentRuleItem.id}
+          itemName={currentRuleItem.name}
+          onClose={() => { setShowRuleModal(false); setCurrentRuleItem(null); }}
+          onSave={() => {
+            fetchItems();
+            fetchFilterOptions();
+          }}
         />
       )}
     </div>

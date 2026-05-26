@@ -121,6 +121,7 @@ class AssessmentItemRepository:
             detection_item=data.get('detection_item'),
             assessment_indicators=json.dumps(data.get('assessment_indicators', []), ensure_ascii=False),
             assessment_levels=json.dumps(data.get('assessment_levels', []), ensure_ascii=False),
+            rules_data=json.dumps(data.get('rules_data', []), ensure_ascii=False),
             created_by=current_user_id,
             updated_by=current_user_id
         )
@@ -129,7 +130,7 @@ class AssessmentItemRepository:
         db.session.commit()
         
         return self.get_by_id(new_id)
-    
+
     def update(self, item_id, data, current_user_id):
         """更新测评项"""
         item = self.get_by_id_raw(item_id)
@@ -148,6 +149,8 @@ class AssessmentItemRepository:
             item.assessment_indicators = json.dumps(data['assessment_indicators'], ensure_ascii=False)
         if 'assessment_levels' in data:
             item.assessment_levels = json.dumps(data['assessment_levels'], ensure_ascii=False)
+        if 'rules_data' in data:
+            item.rules_data = json.dumps(data['rules_data'], ensure_ascii=False)
         
         item.updated_by = current_user_id
         
@@ -259,6 +262,25 @@ class AssessmentItemRepository:
             'per_page': per_page,
             'pages': paginated.pages
         }
+    
+    def update_rules_data(self, item_id, rules_data, current_user_id):
+        """更新测评项的规则数据"""
+        item = self.get_by_id_raw(item_id)
+        if not item:
+            return None
+        
+        item.rules_data = json.dumps(rules_data, ensure_ascii=False)
+        item.updated_by = current_user_id
+        
+        db.session.commit()
+        return item
 
+    def get_rules_data(self, item_id):
+        """获取测评项的规则数据"""
+        item = self.get_by_id(item_id)
+        if not item:
+            return None
+        return item.get('rules_data', [])
+    
 # 创建单例
 assessment_item_repo = AssessmentItemRepository()

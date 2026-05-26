@@ -16,6 +16,7 @@ class AssessmentItem(db.Model):
     detection_item = db.Column(db.Text, nullable=False, comment='检测项')
     assessment_indicators = db.Column(db.Text, nullable=True, comment='测评指标（JSON数组）')
     assessment_levels = db.Column(db.Text, nullable=True, comment='测评等级（JSON数组）')
+    rules_data = db.Column(db.Text, nullable=True, comment='规则数据（JSON格式）')
     created_by = db.Column(db.Integer, nullable=True, comment='创建人ID')
     updated_by = db.Column(db.Integer, nullable=True, comment='修改人ID')
     created_at = db.Column(db.DateTime, default=datetime.now, comment='创建时间')
@@ -37,6 +38,7 @@ class AssessmentItem(db.Model):
             'detection_item': self.detection_item,
             'assessment_indicators': json.loads(self.assessment_indicators) if self.assessment_indicators else [],
             'assessment_levels': json.loads(self.assessment_levels) if self.assessment_levels else [],
+            'rules_data': json.loads(self.rules_data) if self.rules_data else [],
             'created_by': self.created_by,
             'updated_by': self.updated_by,
             'created_at': self.created_at.isoformat() if self.created_at else None,

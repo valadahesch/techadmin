@@ -802,3 +802,19 @@
 .tooltip-content::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* 规则管理按钮样式 */
+.btn-rule {
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 6px;
+}
+
+.btn-rule:hover {
+  background: #7c3aed;
+}
