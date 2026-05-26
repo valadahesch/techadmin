@@ -170,5 +170,95 @@ class AssessmentItemRepository:
         types = db.session.query(self.model.standard_type).distinct().all()
         return [t[0] for t in types if t[0]]
 
+    def get_all_standard_types(self):
+        """获取所有标准类型（去重，不分页）"""
+        results = db.session.query(self.model.standard_type).distinct().all()
+        return [r[0] for r in results if r[0]]
+
+    def get_all_assessment_levels(self):
+        """获取所有测评等级（从JSON数组中提取，去重）"""
+        results = db.session.query(self.model.assessment_levels).all()
+        levels_set = set()
+        for result in results:
+            if result[0]:
+                import json
+                try:
+                    levels = json.loads(result[0])
+                    for level in levels:
+                        levels_set.add(level)
+                except:
+                    pass
+        return sorted(list(levels_set))
+
+    def get_all_security_controls(self):
+        """获取所有安全控制点（去重，不分页）"""
+        results = db.session.query(self.model.security_control).distinct().all()
+        return [r[0] for r in results if r[0]]
+    
+    def get_all(self, page=1, per_page=10, standard_type=None, assessment_level=None, 
+                security_control=None, search=None, sort_field='created_at', sort_order='desc'):
+        """获取所有测评项列表（分页）"""
+        from sqlalchemy import desc, asc
+        
+        creator_alias = aliased(User)
+        updater_alias = aliased(User)
+        
+        query = db.session.query(
+            self.model,
+            creator_alias.username.label('creator_name'),
+            updater_alias.username.label('updater_name')
+        ).outerjoin(
+            creator_alias, self.model.created_by == creator_alias.id
+        ).outerjoin(
+            updater_alias, self.model.updated_by == updater_alias.id
+        )
+        
+        # 按标准类型筛选
+        if standard_type:
+            query = query.filter(self.model.standard_type == standard_type)
+        
+        # 按安全控制点筛选
+        if security_control:
+            query = query.filter(self.model.security_control == security_control)
+        
+        # 按测评等级筛选
+        if assessment_level:
+            query = query.filter(self.model.assessment_levels.like(f'%{assessment_level}%'))
+        
+        # 搜索
+        if search:
+            query = query.filter(
+                or_(
+                    self.model.security_control.like(f'%{search}%'),
+                    self.model.assessment_object.like(f'%{search}%'),
+                    self.model.detection_item.like(f'%{search}%')
+                )
+            )
+        
+        # 排序
+        sort_column = getattr(self.model, sort_field, self.model.created_at)
+        if sort_order == 'asc':
+            query = query.order_by(asc(sort_column))
+        else:
+            query = query.order_by(desc(sort_column))
+        
+        # 分页
+        paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+        
+        items = []
+        for item, creator_name, updater_name in paginated.items:
+            item_dict = item.to_dict()
+            item_dict['creator_name'] = creator_name or ''
+            item_dict['updater_name'] = updater_name or ''
+            items.append(item_dict)
+        
+        return {
+            'items': items,
+            'total': paginated.total,
+            'page': page,
+            'per_page': per_page,
+            'pages': paginated.pages
+        }
+
 # 创建单例
 assessment_item_repo = AssessmentItemRepository()
