@@ -1,6 +1,6 @@
 // client/src/components/Dengbao/RuleManagerModal.jsx
 import React, { useState, useEffect } from 'react';
-import '../../styles/Dengbao/ruleManager.css';
+import '../../styles/Dengbao/RuleManagement.css';
 
 function RuleManagerModal({ itemId, itemName, onClose, onSave }) {
   const [rulesData, setRulesData] = useState([]);

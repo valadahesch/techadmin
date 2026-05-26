@@ -11,7 +11,7 @@ import PermissionManagement from './components/SystemSettings/PermissionManageme
 import DeviceUsageManagement from './components/Dengbao/DeviceUsageManagement';
 import IndicatorManagement from './components/Dengbao/IndicatorManagement';
 import AssessmentItemManagement from './components/Dengbao/AssessmentItemManagement';
-import RuleManagement from './components/Dengbao/RuleManagement';
+// import RuleManagement from './components/Dengbao/RuleManagement';
 import ProjectManagement from './components/Dengbao/ProjectManagement';
 import AssessmentTypeManagement from './components/Dengbao/AssessmentTypeManagement';
 // import './App.css';
@@ -70,11 +70,11 @@ function App() {
               <AssessmentItemManagement />
             </ProtectedRoute>
           } />
-          <Route path="/dengbao/rules" element={
+          {/* <Route path="/dengbao/rules" element={
             <ProtectedRoute requiredPage="dengbao:rule">
               <RuleManagement />
             </ProtectedRoute>
-          } />
+          } /> */}
           <Route path="/dengbao/projects" element={
             <ProtectedRoute requiredPage="dengbao:project">
               <ProjectManagement />
