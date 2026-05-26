@@ -9,6 +9,11 @@ function AssessmentItemManagement() {
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   
+  // 悬浮提示状态
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [tooltipContent, setTooltipContent] = useState([]);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  
   // 筛选选项
   const [filterOptions, setFilterOptions] = useState({
     standard_types: [],
@@ -22,8 +27,8 @@ function AssessmentItemManagement() {
   const [filterSecurityControl, setFilterSecurityControl] = useState('');
   
   // 搜索相关
-  const [searchInputValue, setSearchInputValue] = useState(''); // 输入框的值
-  const [searchKeyword, setSearchKeyword] = useState(''); // 实际搜索的关键词
+  const [searchInputValue, setSearchInputValue] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const searchInputRef = useRef(null);
   
@@ -54,6 +59,24 @@ function AssessmentItemManagement() {
   const [totalPages, setTotalPages] = useState(0);
 
   const getToken = () => localStorage.getItem('access_token');
+
+  // 鼠标悬浮显示指标详情
+  const handleMouseEnter = (event, indicators) => {
+    if (!indicators || indicators.length === 0) return;
+    
+    const rect = event.target.getBoundingClientRect();
+    setTooltipContent(indicators);
+    setTooltipPosition({
+      x: rect.left + window.scrollX,
+      y: rect.bottom + window.scrollY + 5
+    });
+    setTooltipVisible(true);
+  };
+
+  const handleMouseLeave = () => {
+    setTooltipVisible(false);
+    setTooltipContent([]);
+  };
 
   // 获取筛选选项
   const fetchFilterOptions = async () => {
@@ -394,7 +417,7 @@ function AssessmentItemManagement() {
         </div>
       </div>
 
-      {/* 搜索和筛选栏 - 优化后的搜索框 */}
+      {/* 搜索和筛选栏 */}
       <div className="search-bar">
         <div className="search-input-wrapper">
           <input 
@@ -500,9 +523,15 @@ function AssessmentItemManagement() {
                   {visibleColumns.assessment_object && <td>{item.assessment_object}</td>}
                   {visibleColumns.detection_item && <td className="desc-cell" title={item.detection_item}>{item.detection_item}</td>}
                   {visibleColumns.assessment_indicators && (
-                    <td>
+                    <td 
+                      className="indicators-cell"
+                      onMouseEnter={(e) => handleMouseEnter(e, item.assessment_indicators)}
+                      onMouseLeave={handleMouseLeave}
+                    >
                       {item.assessment_indicators && item.assessment_indicators.length > 0 ? (
-                        <span className="indicator-count">{item.assessment_indicators.length}个指标</span>
+                        <span className="indicator-count">
+                          {item.assessment_indicators.length}个指标
+                        </span>
                       ) : '-'}
                     </td>
                   )}
@@ -527,6 +556,31 @@ function AssessmentItemManagement() {
           </tbody>
         </table>
       </div>
+
+      {/* 悬浮提示框 */}
+      {tooltipVisible && tooltipContent.length > 0 && (
+        <div 
+          className="indicators-tooltip"
+          style={{
+            position: 'absolute',
+            left: tooltipPosition.x,
+            top: tooltipPosition.y,
+            zIndex: 1000
+          }}
+        >
+          <div className="tooltip-header">
+            <span>📋 测评指标详情</span>
+          </div>
+          <div className="tooltip-content">
+            {tooltipContent.map((indicator, index) => (
+              <div key={index} className="tooltip-item">
+                <span className="tooltip-bullet">•</span>
+                <span>{indicator}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 分页组件 */}
       {!loading && totalPages > 1 && (
@@ -555,7 +609,7 @@ function AssessmentItemManagement() {
   );
 }
 
-// 多选组件（保持不变）
+// 多选组件
 function MultiSelect({ options, value, onChange, placeholder, displayKey = 'name_cn', valueKey = 'id', allowCustom = true }) {
   const [isOpen, setIsOpen] = useState(false);
   const [customValue, setCustomValue] = useState('');

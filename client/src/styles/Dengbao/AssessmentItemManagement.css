@@ -713,3 +713,92 @@
     width: 95%;
   }
 }
+
+/* 添加到 dengbao.css 中 */
+
+/* 测评指标单元格样式 */
+.indicators-cell {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.indicators-cell:hover {
+  background-color: #f8fafc;
+}
+
+.indicators-cell:hover .indicator-count {
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* 悬浮提示框样式 */
+.indicators-tooltip {
+  background: #1e293b;
+  color: white;
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-width: 200px;
+  max-width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: fadeIn 0.2s ease;
+  pointer-events: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tooltip-header {
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #475569;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.tooltip-content {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.tooltip-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.tooltip-bullet {
+  color: #3b82f6;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* 滚动条样式 */
+.tooltip-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.tooltip-content::-webkit-scrollbar-track {
+  background: #334155;
+  border-radius: 2px;
+}
+
+.tooltip-content::-webkit-scrollbar-thumb {
+  background: #64748b;
+  border-radius: 2px;
+}
+
+.tooltip-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
