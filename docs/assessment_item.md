@@ -2,7 +2,7 @@
 
 ## 1. 概述
 
-测评项管理模块用于管理网络安全等级保护测评中的测评项信息，支持测评项的增删改查、多条件筛选和分页功能。
+测评项管理模块用于管理网络安全等级保护测评中的测评项信息，支持测评项的增删改查、多条件筛选、分页、排序和自定义列显示等功能。
 
 ### 1.1 基本信息
 
@@ -24,7 +24,8 @@ Content-Type: application/json
 
 | 接口名称 | 请求方式 | 接口路径 | 功能说明 |
 |---------|---------|---------|---------|
-| 获取测评项列表 | GET | `/assessment-items` | 获取测评项列表（分页） |
+| 获取测评项列表 | GET | `/assessment-items` | 获取测评项列表（分页、筛选、排序） |
+| 获取筛选选项 | GET | `/assessment-items/filters` | 获取所有筛选选项（标准类型、测评等级、安全控制点） |
 | 获取测评项详情 | GET | `/assessment-items/{id}` | 根据ID获取单个测评项详情 |
 | 新增测评项 | POST | `/assessment-items` | 添加新的测评项 |
 | 更新测评项 | PUT | `/assessment-items/{id}` | 修改测评项信息 |
@@ -35,29 +36,31 @@ Content-Type: application/json
 
 ## 3. 数据模型
 
-### 3.1 标准类型枚举（预定义）
+### 3.1 标准类型
 
+标准类型支持自定义输入，系统会自动识别所有存在的类型供筛选使用。
+
+**预定义常见类型**：
 | 值 | 说明 |
 |---|------|
-| `安全通用要求` | 安全通用要求 |
-| `服务器虚拟化` | 服务器虚拟化 |
-| `云服务商` | 云服务商 |
-| `工业控制` | 工业控制 |
-| `移动互联` | 移动互联 |
-| `物联网` | 物联网 |
+| `安全通用要求` | 网络安全等级保护安全通用要求 |
+| `服务器虚拟化` | 服务器虚拟化安全要求 |
+| `云服务商` | 云服务商安全要求 |
+| `工业控制` | 工业控制系统安全要求 |
+| `移动互联` | 移动互联安全要求 |
+| `物联网` | 物联网安全要求 |
 
-> **注意**：标准类型支持自定义输入，不限于上述枚举值。
+### 3.2 测评等级
 
-### 3.2 测评等级枚举（预定义）
+测评等级支持多选和自定义输入，系统会自动识别所有存在的等级供筛选使用。
 
+**预定义常见等级**：
 | 值 | 说明 |
 |---|------|
 | `等保二级` | 网络安全等级保护二级 |
 | `等保三级` | 网络安全等级保护三级 |
 
-> **注意**：测评等级支持多选，也支持自定义输入。
-
-### 3.3 测评指标数据格式
+### 3.3 测评指标
 
 测评指标从测评指标表中查询，存储为JSON数组：
 
@@ -72,7 +75,7 @@ Content-Type: application/json
 ### 4.1 获取测评项列表
 
 #### 接口描述
-获取测评项列表，支持分页、多条件筛选和搜索。
+获取测评项列表，支持分页、多条件筛选、搜索和排序。
 
 #### 请求信息
 
@@ -84,18 +87,21 @@ Content-Type: application/json
 
 #### 请求参数（Query）
 
-| 参数名 | 类型 | 必填 | 说明 | 示例 |
-|-------|------|-----|------|------|
-| page | int | 否 | 页码，默认1 | `1` |
-| per_page | int | 否 | 每页数量，默认10 | `10` |
-| standard_type | string | 否 | 标准类型筛选 | `安全通用要求` |
-| assessment_level | string | 否 | 测评等级筛选 | `等保三级` |
-| search | string | 否 | 搜索关键词（安全控制点、测评对象、检测项） | `身份鉴别` |
+| 参数名 | 类型 | 必填 | 默认值 | 说明 | 示例 |
+|-------|------|-----|-------|------|------|
+| page | int | 否 | 1 | 页码 | `1` |
+| per_page | int | 否 | 10 | 每页数量 | `10` |
+| standard_type | string | 否 | - | 标准类型筛选（精确匹配） | `安全通用要求` |
+| security_control | string | 否 | - | 安全控制点筛选（精确匹配） | `身份鉴别` |
+| assessment_level | string | 否 | - | 测评等级筛选（模糊匹配） | `等保三级` |
+| search | string | 否 | - | 搜索关键词（安全控制点、测评对象、检测项） | `身份鉴别` |
+| sort_field | string | 否 | `created_at` | 排序字段 | `created_at`、`updated_at`、`security_control` |
+| sort_order | string | 否 | `desc` | 排序方式 | `asc`（升序）、`desc`（降序） |
 
 #### 请求示例
 
 ```http
-GET /api/assessment-items?page=1&per_page=10&standard_type=安全通用要求&assessment_level=等保三级&search=身份鉴别 HTTP/1.1
+GET /api/assessment-items?page=1&per_page=10&standard_type=安全通用要求&assessment_level=等保三级&security_control=身份鉴别&search=鉴别&sort_field=created_at&sort_order=desc HTTP/1.1
 Host: localhost:5000
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
@@ -161,8 +167,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 | items[].updated_by | int | 修改人ID |
 | items[].creator_name | string | 创建人名称 |
 | items[].updater_name | string | 修改人名称 |
-| items[].created_at | string | 创建时间 |
-| items[].updated_at | string | 更新时间 |
+| items[].created_at | string | 创建时间（ISO 8601格式） |
+| items[].updated_at | string | 修改时间（ISO 8601格式） |
 | total | int | 总记录数 |
 | page | int | 当前页码 |
 | per_page | int | 每页数量 |
@@ -170,7 +176,70 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-### 4.2 获取测评项详情
+### 4.2 获取筛选选项
+
+#### 接口描述
+获取所有筛选选项的唯一值列表，用于前端下拉选择框。此接口从数据库全量查询，不受分页限制。
+
+#### 请求信息
+
+| 项目 | 说明 |
+|-----|------|
+| 请求方式 | `GET` |
+| 接口路径 | `/assessment-items/filters` |
+| 是否需要认证 | 是 |
+
+#### 请求示例
+
+```http
+GET /api/assessment-items/filters HTTP/1.1
+Host: localhost:5000
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### 响应示例
+
+**成功响应 (200 OK)**
+
+```json
+{
+  "standard_types": [
+    "安全通用要求",
+    "服务器虚拟化",
+    "云服务商",
+    "工业控制",
+    "移动互联",
+    "物联网",
+    "自定义标准类型1"
+  ],
+  "assessment_levels": [
+    "等保二级",
+    "等保三级",
+    "自定义等级1"
+  ],
+  "security_controls": [
+    "身份鉴别",
+    "访问控制",
+    "安全审计",
+    "入侵防范",
+    "数据备份恢复",
+    "虚拟机隔离",
+    "数据安全"
+  ]
+}
+```
+
+#### 响应字段说明
+
+| 字段 | 类型 | 说明 |
+|-----|------|------|
+| standard_types | array | 所有标准类型（去重） |
+| assessment_levels | array | 所有测评等级（从JSON数组中提取并去重） |
+| security_controls | array | 所有安全控制点（去重） |
+
+---
+
+### 4.3 获取测评项详情
 
 #### 接口描述
 根据测评项ID获取单个测评项的详细信息。
@@ -229,7 +298,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-### 4.3 新增测评项
+### 4.4 新增测评项
 
 #### 接口描述
 添加新的测评项，ID由后端自动生成20位UUID。
@@ -246,12 +315,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 | 参数名 | 类型 | 必填 | 说明 | 示例 |
 |-------|------|-----|------|------|
-| standard_type | string | 是 | 标准类型 | `安全通用要求` |
+| standard_type | string | 是 | 标准类型（支持自定义） | `安全通用要求` |
 | security_control | string | 是 | 安全控制点 | `身份鉴别` |
 | assessment_object | string | 是 | 测评对象 | `网络设备/安全设备` |
 | detection_item | string | 是 | 检测项 | `应启用登录失败处理功能...` |
 | assessment_indicators | array | 否 | 测评指标列表 | `["密码长度", "登录失败次数"]` |
-| assessment_levels | array | 否 | 测评等级列表 | `["等保二级", "等保三级"]` |
+| assessment_levels | array | 否 | 测评等级列表（支持自定义） | `["等保二级", "等保三级"]` |
 
 #### 请求示例
 
@@ -311,7 +380,7 @@ Content-Type: application/json
 
 ---
 
-### 4.4 更新测评项
+### 4.5 更新测评项
 
 #### 接口描述
 修改指定测评项的配置信息。
@@ -388,7 +457,7 @@ Content-Type: application/json
 
 ---
 
-### 4.5 删除测评项
+### 4.6 删除测评项
 
 #### 接口描述
 物理删除指定的测评项。
@@ -431,10 +500,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-### 4.6 获取测评指标列表
+### 4.7 获取测评指标列表
 
 #### 接口描述
-获取测评指标列表，用于前端下拉选择框。
+获取测评指标列表，用于前端下拉选择框（多选）。
 
 #### 请求信息
 
@@ -478,6 +547,15 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 }
 ```
 
+#### 响应字段说明
+
+| 字段 | 类型 | 说明 |
+|-----|------|------|
+| items | array | 测评指标列表 |
+| items[].id | string | 指标ID（20位UUID） |
+| items[].name_cn | string | 中文指标名称 |
+| items[].name_en | string | 英文指标名称 |
+
 ---
 
 ## 5. 错误码说明
@@ -494,48 +572,132 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-## 6. 字段说明
+## 6. 字段说明汇总
 
 ### 6.1 标准类型 (standard_type)
 
-| 预定义值 | 说明 | 是否支持自定义 |
-|---------|------|--------------|
-| 安全通用要求 | 网络安全等级保护安全通用要求 | 是 |
-| 服务器虚拟化 | 服务器虚拟化安全要求 | 是 |
-| 云服务商 | 云服务商安全要求 | 是 |
-| 工业控制 | 工业控制系统安全要求 | 是 |
-| 移动互联 | 移动互联安全要求 | 是 |
-| 物联网 | 物联网安全要求 | 是 |
+| 说明 | 是否支持自定义 |
+|------|--------------|
+| 标准类型，用于分类测评项 | 是，支持用户自定义输入 |
 
-### 6.2 测评等级 (assessment_levels)
+**常见值**：
+- 安全通用要求
+- 服务器虚拟化
+- 云服务商
+- 工业控制
+- 移动互联
+- 物联网
 
-| 预定义值 | 说明 | 是否支持自定义 |
-|---------|------|--------------|
-| 等保二级 | 网络安全等级保护二级 | 是 |
-| 等保三级 | 网络安全等级保护三级 | 是 |
+### 6.2 安全控制点 (security_control)
 
-### 6.3 测评指标 (assessment_indicators)
+| 说明 | 是否支持自定义 |
+|------|--------------|
+| 安全控制点的具体名称 | 是，支持用户自定义输入 |
 
-测评指标从测评指标表中查询，常见指标包括：
+**常见值**：
+- 身份鉴别
+- 访问控制
+- 安全审计
+- 入侵防范
+- 数据备份恢复
+- 虚拟机隔离
+- 数据安全
 
-| 指标名称 | 英文名称 |
-|---------|---------|
-| 密码长度 | passwordLength |
-| 密码有效期 | passwordExpiry |
-| 登录失败次数 | loginFailCount |
-| 锁定时间 | lockTime |
-| 连接超时时间 | timeout |
-| 系统管理员 | sysAdmin |
-| 安全管理员 | securityAdmin |
-| 审计管理员 | auditAdmin |
-| IPS模块是否开启 | ipsModule |
-| 是否开启AV模块 | avModule |
-| 保密性算法 | confidentialityAlgoDetail |
-| 完整性算法 | integrityAlgoDetail |
+### 6.3 测评等级 (assessment_levels)
+
+| 说明 | 格式 | 是否支持自定义 |
+|------|------|--------------|
+| 适用的等保等级，支持多选 | JSON数组 | 是，支持用户自定义输入 |
+
+**常见值**：
+- `["等保二级"]`
+- `["等保三级"]`
+- `["等保二级", "等保三级"]`
+
+### 6.4 测评指标 (assessment_indicators)
+
+| 说明 | 格式 | 是否支持自定义 |
+|------|------|--------------|
+| 关联的测评指标，支持多选 | JSON数组 | 否，从测评指标表中选择 |
+
+**常见值**：
+- `["密码长度", "登录失败次数", "锁定时间"]`
+- `["系统管理员", "安全管理员", "审计管理员"]`
 
 ---
 
-## 7. 数据库及初始化数据
+## 7. 排序字段说明
+
+| 字段名 | 说明 | 支持排序 |
+|-------|------|---------|
+| created_at | 创建时间 | ✅ 是 |
+| updated_at | 修改时间 | ✅ 是 |
+| security_control | 安全控制点 | ✅ 是 |
+| standard_type | 标准类型 | ✅ 是 |
+| id | 主键ID | ❌ 否 |
+| assessment_object | 测评对象 | ❌ 否 |
+| detection_item | 检测项 | ❌ 否 |
+
+---
+
+## 8. 使用场景示例
+
+### 8.1 场景一：筛选等保三级的测评项
+
+```http
+GET /api/assessment-items?assessment_level=等保三级
+```
+
+### 8.2 场景二：按创建时间升序排列
+
+```http
+GET /api/assessment-items?sort_field=created_at&sort_order=asc
+```
+
+### 8.3 场景三：搜索包含"身份鉴别"的测评项
+
+```http
+GET /api/assessment-items?search=身份鉴别
+```
+
+### 8.4 场景四：组合筛选（标准类型+安全控制点+测评等级）
+
+```http
+GET /api/assessment-items?standard_type=安全通用要求&security_control=身份鉴别&assessment_level=等保二级
+```
+
+### 8.5 场景五：获取所有筛选选项（前端初始化）
+
+```http
+GET /api/assessment-items/filters
+```
+
+---
+
+## 9. 注意事项
+
+1. **认证要求**：所有接口都需要在请求头中携带有效的JWT Token
+2. **ID生成**：新增测评项时ID由后端自动生成20位UUID，前端无需传递
+3. **多选字段**：
+   - `assessment_indicators`：测评指标，支持多选，存储为JSON数组
+   - `assessment_levels`：测评等级，支持多选，存储为JSON数组
+4. **自定义输入**：
+   - 标准类型支持自定义输入，不限于预定义选项
+   - 测评等级支持自定义输入，不限于预定义选项
+   - 安全控制点支持自定义输入
+5. **搜索说明**：搜索功能会匹配安全控制点、测评对象、检测项三个字段
+6. **分页说明**：
+   - 默认每页10条记录
+   - 支持自定义每页数量（通过per_page参数）
+   - 分页信息包含总记录数、总页数等
+7. **筛选选项接口**：
+   - `/assessment-items/filters` 从数据库全量查询，不受分页限制
+   - 新增、编辑、删除后应重新调用此接口刷新筛选选项
+8. **创建人/修改人**：由后端从Token中自动获取当前登录用户ID
+9. **时间格式**：所有时间字段使用ISO 8601格式（`YYYY-MM-DDTHH:mm:ss`）
+10. **排序说明**：排序字段和排序方式可组合使用，默认按创建时间降序排列
+
+## 10. 数据库及初始化数据
 ```sql
 CREATE TABLE assessment_item (
     id VARCHAR(20) PRIMARY KEY COMMENT '20位UUID主键',
