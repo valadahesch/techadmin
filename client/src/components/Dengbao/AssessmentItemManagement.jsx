@@ -536,12 +536,19 @@ function AssessmentItemManagement() {
                   {visibleColumns.assessment_indicators && (
                     <td 
                       className="indicators-cell"
-                      onMouseEnter={(e) => handleMouseEnter(e, item.assessment_indicators)}
+                      onMouseEnter={(e) => {
+                        if (item.assessment_indicators) {
+                          const indicatorList = typeof item.assessment_indicators === 'object' 
+                            ? Object.values(item.assessment_indicators) 
+                            : item.assessment_indicators;
+                          handleMouseEnter(e, indicatorList);
+                        }
+                      }}
                       onMouseLeave={handleMouseLeave}
                     >
-                      {item.assessment_indicators && item.assessment_indicators.length > 0 ? (
+                      {item.assessment_indicators && Object.keys(item.assessment_indicators).length > 0 ? (
                         <span className="indicator-count">
-                          {item.assessment_indicators.length}个指标
+                          {Object.keys(item.assessment_indicators).length}个指标
                         </span>
                       ) : '-'}
                     </td>
@@ -641,46 +648,72 @@ function AssessmentItemManagement() {
 }
 
 // 多选组件
+// 修改 MultiSelect 组件，使其返回对象格式
 function MultiSelect({ options, value, onChange, placeholder, displayKey = 'name_cn', valueKey = 'id', allowCustom = true }) {
   const [isOpen, setIsOpen] = useState(false);
   const [customValue, setCustomValue] = useState('');
 
-  const selectedSet = new Set(value);
+  // 将对象转换为选中值的数组（用于UI显示）
+  const getSelectedValues = () => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'object') return Object.keys(value);
+    return [];
+  };
+
+  const selectedValues = getSelectedValues();
+  const selectedSet = new Set(selectedValues);
 
   const toggleOption = (optionValue) => {
-    const newValue = [...value];
+    const newValue = { ...(typeof value === 'object' && !Array.isArray(value) ? value : {}) };
+    
     if (selectedSet.has(optionValue)) {
-      const index = newValue.indexOf(optionValue);
-      newValue.splice(index, 1);
+      // 删除
+      delete newValue[optionValue];
     } else {
-      newValue.push(optionValue);
+      // 添加，值为选项的显示名称
+      const option = options.find(opt => (opt[valueKey] || opt) === optionValue);
+      const optionLabel = option ? (option[displayKey] || option) : optionValue;
+      newValue[optionValue] = optionLabel;
     }
+    
     onChange(newValue);
   };
 
   const addCustomValue = () => {
     if (customValue && !selectedSet.has(customValue)) {
-      onChange([...value, customValue]);
+      const newValue = { ...(typeof value === 'object' && !Array.isArray(value) ? value : {}) };
+      newValue[customValue] = customValue;
+      onChange(newValue);
       setCustomValue('');
     }
   };
 
   const removeValue = (val) => {
-    const newValue = value.filter(v => v !== val);
+    const newValue = { ...(typeof value === 'object' && !Array.isArray(value) ? value : {}) };
+    delete newValue[val];
     onChange(newValue);
+  };
+
+  // 获取显示标签
+  const getDisplayLabel = (val) => {
+    if (typeof value === 'object' && value[val]) {
+      return value[val];
+    }
+    return val;
   };
 
   return (
     <div className="multi-select">
       <div className="multi-select-header" onClick={() => setIsOpen(!isOpen)}>
         <div className="selected-tags">
-          {value.map(val => (
+          {selectedValues.map(val => (
             <span key={val} className="selected-tag">
-              {val}
+              {getDisplayLabel(val)}
               <button type="button" onClick={(e) => { e.stopPropagation(); removeValue(val); }}>×</button>
             </span>
           ))}
-          {value.length === 0 && <span className="placeholder">{placeholder}</span>}
+          {selectedValues.length === 0 && <span className="placeholder">{placeholder}</span>}
         </div>
         <span className="arrow">{isOpen ? '▲' : '▼'}</span>
       </div>
@@ -699,7 +732,8 @@ function MultiSelect({ options, value, onChange, placeholder, displayKey = 'name
           )}
           <div className="options-list">
             {options.map(opt => {
-              const optValue = typeof opt === 'string' ? opt : opt[displayKey];
+              const optValue = typeof opt === 'string' ? opt : opt[valueKey];
+              const optLabel = typeof opt === 'string' ? opt : (opt[displayKey] || opt);
               return (
                 <label key={optValue} className="option-item">
                   <input
@@ -707,7 +741,7 @@ function MultiSelect({ options, value, onChange, placeholder, displayKey = 'name
                     checked={selectedSet.has(optValue)}
                     onChange={() => toggleOption(optValue)}
                   />
-                  <span>{optValue}</span>
+                  <span>{optLabel}</span>
                 </label>
               );
             })}
@@ -724,7 +758,7 @@ function AssessmentItemModal({ item, onSave, onClose, standardTypeOptions, level
     security_control: item?.security_control || '',
     assessment_object: item?.assessment_object || '',
     detection_item: item?.detection_item || '',
-    assessment_indicators: item?.assessment_indicators || [],
+    assessment_indicators: item?.assessment_indicators || {},  // 改为对象，默认空对象
     assessment_levels: item?.assessment_levels || []
   });
   const [customStandardType, setCustomStandardType] = useState('');
