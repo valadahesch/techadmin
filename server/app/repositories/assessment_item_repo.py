@@ -109,9 +109,18 @@ class AssessmentItemRepository:
             if not existing:
                 return new_id
     
+    # server/app/repositories/assessment_item_repo.py
+    # 修改 create 和 update 方法中的数据处理
+
     def create(self, data, current_user_id):
         """创建测评项"""
         new_id = self._generate_unique_id()
+        
+        # 处理测评指标：确保是对象格式
+        assessment_indicators = data.get('assessment_indicators', {})
+        if isinstance(assessment_indicators, list):
+            # 如果是数组，转换为对象（兼容旧数据）
+            assessment_indicators = {item: item for item in assessment_indicators}
         
         item = self.model(
             id=new_id,
@@ -119,7 +128,7 @@ class AssessmentItemRepository:
             security_control=data.get('security_control'),
             assessment_object=data.get('assessment_object'),
             detection_item=data.get('detection_item'),
-            assessment_indicators=json.dumps(data.get('assessment_indicators', []), ensure_ascii=False),
+            assessment_indicators=json.dumps(assessment_indicators, ensure_ascii=False),
             assessment_levels=json.dumps(data.get('assessment_levels', []), ensure_ascii=False),
             rules_data=json.dumps(data.get('rules_data', []), ensure_ascii=False),
             created_by=current_user_id,
@@ -146,7 +155,11 @@ class AssessmentItemRepository:
         if 'detection_item' in data:
             item.detection_item = data['detection_item']
         if 'assessment_indicators' in data:
-            item.assessment_indicators = json.dumps(data['assessment_indicators'], ensure_ascii=False)
+            # 确保是对象格式
+            indicators_data = data['assessment_indicators']
+            if isinstance(indicators_data, list):
+                indicators_data = {item: item for item in indicators_data}
+            item.assessment_indicators = json.dumps(indicators_data, ensure_ascii=False)
         if 'assessment_levels' in data:
             item.assessment_levels = json.dumps(data['assessment_levels'], ensure_ascii=False)
         if 'rules_data' in data:
