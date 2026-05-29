@@ -6,6 +6,16 @@ import TypeDetailModal from './TypeDetailModal';
 import '../../styles/Dengbao/AssessmentTypeManagement.css';
 
 function AssessmentTypeManagement() {
+  const getGroupColorIndex = (groupName) => {
+    // 使用简单的哈希算法生成固定索引
+    let hash = 0;
+    for (let i = 0; i < groupName.length; i++) {
+      hash = ((hash << 5) - hash) + groupName.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return Math.abs(hash) % 10; // 10种颜色循环使用
+  };
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -431,7 +441,9 @@ function AssessmentTypeManagement() {
                     <td>
                       {item.groups && item.groups.length > 0 ? (
                         item.groups.map(group => (
-                          <span key={group} className="group-tag">{group}</span>
+                          <span key={group} className={`group-tag color-${getGroupColorIndex(group)}`}>
+                            {group}
+                          </span>
                         ))
                       ) : '-'}
                     </td>
