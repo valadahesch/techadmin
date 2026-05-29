@@ -15,6 +15,9 @@ import AssessmentItemManagement from './components/Dengbao/AssessmentItemManagem
 import ProjectManagement from './components/Dengbao/ProjectManagement';
 import AssessmentTypeManagement from './components/Dengbao/AssessmentTypeManagement';
 // import './App.css';
+import ProjectManagementPage from './components/Dengbao/ProjectManagementPage';
+import ProjectAssetsPage from './components/Dengbao/ProjectAssetsPage';
+import ProjectLeakScanPage from './components/Dengbao/ProjectLeakScanPage';
 
 function App() {
   return (
@@ -83,6 +86,21 @@ function App() {
           <Route path="/dengbao/assessment-types" element={
             <ProtectedRoute requiredPage="dengbao:assessment-type">
               <AssessmentTypeManagement />
+            </ProtectedRoute>
+          } />
+          <Route path="/dengbao/project-management" element={
+            <ProtectedRoute>
+              <ProjectManagementPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/dengbao/project-assets" element={
+            <ProtectedRoute>
+              <ProjectAssetsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/dengbao/project-leak-scan" element={
+            <ProtectedRoute>
+              <ProjectLeakScanPage />
             </ProtectedRoute>
           } />
           </Route>

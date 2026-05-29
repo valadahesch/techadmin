@@ -9,7 +9,8 @@ function Layout() {
   
   const [expandedMenus, setExpandedMenus] = useState({
     systemSettings: false,
-    dengbaoAssessment: false  // 等保测评菜单状态
+    dengbaoAssessment: false,
+    projectManagement: false  // 新增：项目管理子菜单状态
   });
   
   // 侧边栏收缩状态
@@ -23,7 +24,7 @@ function Layout() {
   };
 
   const toggleMenu = (menu) => {
-    if (sidebarCollapsed) return; // 收缩时禁止展开子菜单
+    if (sidebarCollapsed) return;
     setExpandedMenus(prev => ({
       ...prev,
       [menu]: !prev[menu]
@@ -33,11 +34,11 @@ function Layout() {
   // 切换侧边栏收缩
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
-    // 收缩时自动收起所有子菜单
     if (!sidebarCollapsed) {
       setExpandedMenus({
         systemSettings: false,
-        dengbaoAssessment: false
+        dengbaoAssessment: false,
+        projectManagement: false
       });
     }
   };
@@ -131,7 +132,10 @@ function Layout() {
                 '/dengbao/indicators',
                 '/dengbao/assessment-items',
                 '/dengbao/rules',
-                '/dengbao/projects'
+                '/dengbao/projects',
+                '/dengbao/project-management',
+                '/dengbao/project-assets',
+                '/dengbao/project-leak-scan'
               ]) ? 'active-parent' : ''}`}
               onClick={() => toggleMenu('dengbaoAssessment')}
             >
@@ -165,15 +169,43 @@ function Layout() {
                     🏷️ 测评类型管理
                   </Link>
                 </li>
-                {/* <li>
-                  <Link to="/dengbao/rules" className={`sub-nav-link ${isActive('/dengbao/rules') ? 'active' : ''}`} onClick={closeMobileSidebar}>
-                    ⚙️ 测评规则管理
-                  </Link>
-                </li> */}
-                <li>
-                  <Link to="/dengbao/projects" className={`sub-nav-link ${isActive('/dengbao/projects') ? 'active' : ''}`} onClick={closeMobileSidebar}>
-                    🗂️ 测评项目管理
-                  </Link>
+                {/* 测评项目管理 - 带三级子菜单 */}
+                <li className="sub-nav-item">
+                  <div 
+                    className={`sub-nav-header ${isSubMenuActive([
+                      '/dengbao/project-management',
+                      '/dengbao/project-assets',
+                      '/dengbao/project-leak-scan'
+                    ]) ? 'active-parent' : ''}`}
+                    onClick={() => toggleMenu('projectManagement')}
+                  >
+                    <span className="sub-nav-icon">🗂️</span>
+                    {!sidebarCollapsed && (
+                      <>
+                        <span className="sub-nav-text">测评项目管理</span>
+                        <span className={`arrow ${expandedMenus.projectManagement ? 'expanded' : ''}`}>▼</span>
+                      </>
+                    )}
+                  </div>
+                  {expandedMenus.projectManagement && (
+                    <ul className="sub-menu-level3">
+                      <li>
+                        <Link to="/dengbao/project-management" className={`sub-nav-link-level3 ${isActive('/dengbao/project-management') ? 'active' : ''}`} onClick={closeMobileSidebar}>
+                          📋 项目管理
+                        </Link>
+                      </li>
+                      <li>
+                        <Link to="/dengbao/project-assets" className={`sub-nav-link-level3 ${isActive('/dengbao/project-assets') ? 'active' : ''}`} onClick={closeMobileSidebar}>
+                          💻 项目资产
+                        </Link>
+                      </li>
+                      <li>
+                        <Link to="/dengbao/project-leak-scan" className={`sub-nav-link-level3 ${isActive('/dengbao/project-leak-scan') ? 'active' : ''}`} onClick={closeMobileSidebar}>
+                          🔎 漏扫管理
+                        </Link>
+                      </li>
+                    </ul>
+                  )}
                 </li>
               </ul>
             )}

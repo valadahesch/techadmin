@@ -558,3 +558,84 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 }
+
+/* 三级子菜单样式 */
+.sub-nav-item {
+  position: relative;
+}
+
+.sub-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  color: #94a3b8;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.sub-nav-header:hover {
+  background: #334155;
+  color: white;
+}
+
+.sub-nav-header.active-parent {
+  background: #1e293b;
+  color: #3b82f6;
+}
+
+.sub-nav-icon {
+  font-size: 1rem;
+  margin-right: 0.5rem;
+}
+
+.sub-nav-text {
+  flex: 1;
+}
+
+/* 三级菜单 */
+.sub-menu-level3 {
+  list-style: none;
+  padding-left: 2rem;
+  margin: 0.25rem 0;
+}
+
+.sub-nav-link-level3 {
+  display: block;
+  padding: 0.5rem 1rem 0.5rem 2rem;
+  color: #94a3b8;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.sub-nav-link-level3:hover {
+  background: #334155;
+  color: white;
+}
+
+.sub-nav-link-level3.active {
+  background: #3b82f6;
+  color: white;
+}
+
+/* 收缩状态下的三级菜单 */
+.layout.sidebar-collapsed .sub-nav-header {
+  justify-content: center;
+  padding: 0.75rem 0;
+}
+
+.layout.sidebar-collapsed .sub-nav-icon {
+  margin-right: 0;
+}
+
+.layout.sidebar-collapsed .sub-nav-text,
+.layout.sidebar-collapsed .sub-nav-header .arrow {
+  display: none;
+}
+
+.layout.sidebar-collapsed .sub-menu-level3 {
+  display: none;
+}
