@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from flask import Blueprint
-from app.views import auth, users, roles, permissions, leak_scan, device_usage, assessment_indicator, assessment_item
+from app.views import auth, users, roles, permissions, leak_scan, device_usage,\
+    assessment_indicator, assessment_item, assessment_type
 
 
 def register_blueprints(app):
@@ -19,7 +20,7 @@ def register_blueprints(app):
     device_usage.init_device_usage_routes(api_bp)
     assessment_indicator.init_assessment_indicator_routes(api_bp)
     assessment_item.init_assessment_item_routes(api_bp)
-    
+    assessment_type.init_assessment_type_routes(api_bp)
     # 如果有测评模块，取消下面的注释
     # from app.views import assessment
     # assessment.init_assessment_routes(api_bp)
