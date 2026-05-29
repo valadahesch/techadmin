@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TypeDetailModal from './TypeDetailModal';
-import '../../styles/Dengbao/assessmentType.css';
+import '../../styles/Dengbao/AssessmentTypeManagement.css';
 
 function AssessmentTypeManagement() {
   const [items, setItems] = useState([]);

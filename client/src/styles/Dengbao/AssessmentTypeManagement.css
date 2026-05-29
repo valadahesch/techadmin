@@ -41,7 +41,18 @@
 }
 
 .btn-edit {
-  background: #10b981;
+  background: #70d7b5;
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 8px;
+}
+
+.btn-detail {
+  background: #6d9487;
   color: white;
   border: none;
   padding: 4px 12px;
@@ -52,7 +63,7 @@
 }
 
 .btn-delete {
-  background: #ef4444;
+  background: #d24949;
   color: white;
   border: none;
   padding: 4px 12px;
