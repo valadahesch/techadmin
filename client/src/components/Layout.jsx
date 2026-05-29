@@ -151,11 +151,6 @@ function Layout() {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/dengbao/assessment-types" className={`sub-nav-link ${isActive('/dengbao/assessment-types') ? 'active' : ''}`} onClick={closeMobileSidebar}>
-                    🏷️ 测评类型管理
-                  </Link>
-                </li>
-                <li>
                   <Link to="/dengbao/indicators" className={`sub-nav-link ${isActive('/dengbao/indicators') ? 'active' : ''}`} onClick={closeMobileSidebar}>
                     📈 测评指标管理
                   </Link>
@@ -166,10 +161,15 @@ function Layout() {
                   </Link>
                 </li>
                 <li>
+                  <Link to="/dengbao/assessment-types" className={`sub-nav-link ${isActive('/dengbao/assessment-types') ? 'active' : ''}`} onClick={closeMobileSidebar}>
+                    🏷️ 测评类型管理
+                  </Link>
+                </li>
+                {/* <li>
                   <Link to="/dengbao/rules" className={`sub-nav-link ${isActive('/dengbao/rules') ? 'active' : ''}`} onClick={closeMobileSidebar}>
                     ⚙️ 测评规则管理
                   </Link>
-                </li>
+                </li> */}
                 <li>
                   <Link to="/dengbao/projects" className={`sub-nav-link ${isActive('/dengbao/projects') ? 'active' : ''}`} onClick={closeMobileSidebar}>
                     🗂️ 测评项目管理
