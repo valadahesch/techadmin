@@ -53,6 +53,17 @@
 
 .btn-detail {
   background: #6d9487;
+  color: rgb(42, 38, 42);
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 8px;
+}
+
+.btn-reset {
+  background: #db516c;
   color: white;
   border: none;
   padding: 4px 12px;
@@ -391,6 +402,17 @@
   transform: translateY(-50%);
   font-size: 16px;
   opacity: 0.6;
+}
+
+.search-btn {
+  background: #3630db;
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-right: 8px;
 }
 
 .filter-select {

@@ -368,13 +368,13 @@ function AssessmentTypeManagement() {
         <div className="search-input-wrapper">
           <input 
             type="text" 
-            placeholder="搜索名称、描述、群组、创建人、修改人..." 
+            placeholder="[搜索]: 名称、描述、群组、创建人、修改人..." 
             value={searchInputValue}
             onChange={(e) => setSearchInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             className="search-input"
           />
-          <span className="search-icon">🔍</span>
+          {/* <span className="search-icon">🔍</span> */}
           <button 
             className="search-btn" 
             onClick={handleSearch}
