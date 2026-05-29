@@ -498,7 +498,7 @@ function AssessmentTypeManagement() {
   );
 }
 
-// 新增/编辑模态框组件（保持不变）
+// 新增/编辑模态框组件（优化版）
 function AssessmentTypeModal({ item, onSave, onClose, groupOptions }) {
   const [formData, setFormData] = useState({
     name: item?.name || '',
@@ -508,21 +508,16 @@ function AssessmentTypeModal({ item, onSave, onClose, groupOptions }) {
   const [customGroup, setCustomGroup] = useState('');
   const [showCustomGroup, setShowCustomGroup] = useState(false);
 
-  const handleGroupsChange = (value) => {
-    if (value === 'custom') {
-      setShowCustomGroup(true);
-    } else {
-      setShowCustomGroup(false);
-      const newGroups = formData.groups.includes(value)
-        ? formData.groups.filter(g => g !== value)
-        : [...formData.groups, value];
-      setFormData({ ...formData, groups: newGroups });
-    }
+  const handleGroupsChange = (groupValue) => {
+    const newGroups = formData.groups.includes(groupValue)
+      ? formData.groups.filter(g => g !== groupValue)
+      : [...formData.groups, groupValue];
+    setFormData({ ...formData, groups: newGroups });
   };
 
   const addCustomGroup = () => {
-    if (customGroup && !formData.groups.includes(customGroup)) {
-      setFormData({ ...formData, groups: [...formData.groups, customGroup] });
+    if (customGroup && customGroup.trim() && !formData.groups.includes(customGroup.trim())) {
+      setFormData({ ...formData, groups: [...formData.groups, customGroup.trim()] });
       setCustomGroup('');
       setShowCustomGroup(false);
     }
@@ -534,75 +529,132 @@ function AssessmentTypeModal({ item, onSave, onClose, groupOptions }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h2>{item ? '编辑测评类型' : '新增测评类型'}</h2>
-        <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }}>
-          <div className="form-group">
-            <label>名称 *</label>
-            <input 
-              type="text" 
-              value={formData.name} 
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required 
-            />
+      <div className="modal-content optimized" onClick={(e) => e.stopPropagation()}>
+        {/* 弹窗头部 */}
+        <div className="modal-header-optimized">
+          <div className="modal-header-icon">
+            {item ? '✏️' : '➕'}
           </div>
-          <div className="form-group">
-            <label>描述</label>
-            <textarea 
-              value={formData.description} 
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows="3"
-            />
+          <div className="modal-header-text">
+            <h2>{item ? '编辑测评类型' : '新增测评类型'}</h2>
+            <p>{item ? '修改测评类型的基本信息和群组配置' : '添加新的测评类型，配置基本信息'}</p>
           </div>
-          <div className="form-group">
-            <label>群组（可多选）</label>
-            <div className="groups-selector">
-              {groupOptions.map(group => (
-                <label key={group} className="group-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={formData.groups.includes(group)}
-                    onChange={() => handleGroupsChange(group)}
-                  />
-                  <span>{group}</span>
-                </label>
-              ))}
-              <label className="group-checkbox">
-                <input
-                  type="checkbox"
-                  checked={showCustomGroup}
-                  onChange={() => handleGroupsChange('custom')}
-                />
-                <span>自定义...</span>
-              </label>
-            </div>
-            {showCustomGroup && (
-              <div className="custom-group-input">
+          <button className="modal-close-optimized" onClick={onClose}>×</button>
+        </div>
+
+        {/* 弹窗内容 */}
+        <div className="modal-body-optimized">
+          <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }}>
+            {/* 基本信息区域 */}
+            <div className="form-section">
+              <div className="form-section-title">
+                <span className="section-icon">📋</span>
+                <span>基本信息</span>
+              </div>
+              <div className="form-group-optimized">
+                <label className="form-label-required">名称</label>
                 <input 
                   type="text" 
-                  placeholder="输入群组名称"
-                  value={customGroup}
-                  onChange={(e) => setCustomGroup(e.target.value)}
+                  value={formData.name} 
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="请输入测评类型名称"
+                  required 
+                  className="form-input"
                 />
-                <button type="button" onClick={addCustomGroup}>添加</button>
               </div>
-            )}
-            {formData.groups.length > 0 && (
-              <div className="selected-groups">
-                {formData.groups.map(group => (
-                  <span key={group} className="selected-group">
-                    {group}
-                    <button type="button" onClick={() => removeGroup(group)}>×</button>
-                  </span>
-                ))}
+              <div className="form-group-optimized">
+                <label className="form-label">描述</label>
+                <textarea 
+                  value={formData.description} 
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows="3"
+                  placeholder="请输入测评类型描述信息..."
+                  className="form-textarea"
+                />
               </div>
-            )}
-          </div>
-          <div className="modal-actions">
-            <button type="submit" className="btn-primary">保存</button>
-            <button type="button" className="btn-secondary" onClick={onClose}>取消</button>
-          </div>
-        </form>
+            </div>
+
+            {/* 群组配置区域 */}
+            <div className="form-section">
+              <div className="form-section-title">
+                <span className="section-icon">🏷️</span>
+                <span>群组配置</span>
+              </div>
+              
+              {/* 已有群组列表 - 复选框横向排列 */}
+              {groupOptions.length > 0 && (
+                <div className="groups-grid">
+                  {groupOptions.map(group => (
+                    <label key={group} className="group-checkbox-optimized">
+                      <input
+                        type="checkbox"
+                        checked={formData.groups.includes(group)}
+                        onChange={() => handleGroupsChange(group)}
+                      />
+                      <span className="checkbox-custom"></span>
+                      <span className="group-name">{group}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {/* 自定义群组区域 */}
+              <div className="custom-group-section">
+                <label className="group-checkbox-optimized">
+                  <input
+                    type="checkbox"
+                    checked={showCustomGroup}
+                    onChange={() => setShowCustomGroup(!showCustomGroup)}
+                  />
+                  <span className="checkbox-custom"></span>
+                  <span className="group-name">自定义群组</span>
+                </label>
+                
+                {showCustomGroup && (
+                  <div className="custom-group-input-optimized">
+                    <input 
+                      type="text" 
+                      placeholder="输入群组名称，按回车或点击添加"
+                      value={customGroup}
+                      onChange={(e) => setCustomGroup(e.target.value)}
+                      onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); addCustomGroup(); } }}
+                      className="custom-input-field"
+                      autoFocus
+                    />
+                    <button type="button" className="btn-add-custom" onClick={addCustomGroup}>
+                      + 添加
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* 已选群组标签展示 */}
+              {formData.groups.length > 0 && (
+                <div className="selected-groups-optimized">
+                  <div className="selected-label">已选群组：</div>
+                  <div className="selected-tags-list">
+                    {formData.groups.map(group => (
+                      <span key={group} className="selected-tag-optimized">
+                        {group}
+                        <button type="button" className="remove-tag" onClick={() => removeGroup(group)}>×</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 操作按钮 */}
+            <div className="modal-actions-optimized">
+              <button type="button" className="btn-cancel-optimized" onClick={onClose}>
+                取消
+              </button>
+              <button type="submit" className="btn-save-optimized">
+                {item ? '保存修改' : '创建类型'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
