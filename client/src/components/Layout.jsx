@@ -9,8 +9,8 @@ function Layout() {
   
   const [expandedMenus, setExpandedMenus] = useState({
     systemSettings: false,
-    dengbaoAssessment: false,
-    projectManagement: false  // 新增：项目管理子菜单状态
+    dengbaoAssessment: false,     // 等保测评菜单状态
+    projectManagement: false       // 测评项目管理子菜单状态
   });
   
   // 侧边栏收缩状态
@@ -68,6 +68,13 @@ function Layout() {
            hasPagePermission('page:permission:management');
   };
 
+  // 三级菜单路径列表
+  const projectManagementPaths = [
+    '/dengbao/project-management',
+    '/dengbao/project-assets',
+    '/dengbao/project-leak-scan'
+  ];
+
   return (
     <div className={`layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       {/* 移动端菜单按钮 */}
@@ -123,7 +130,7 @@ function Layout() {
             </Link>
           </li>
 
-          {/* 等保测评 */}
+          {/* 等保测评 - 一级菜单 */}
           <li className="nav-item">
             <div 
               className={`nav-header ${isSubMenuActive([
@@ -131,11 +138,7 @@ function Layout() {
                 '/dengbao/assessment-types',
                 '/dengbao/indicators',
                 '/dengbao/assessment-items',
-                '/dengbao/rules',
-                '/dengbao/projects',
-                '/dengbao/project-management',
-                '/dengbao/project-assets',
-                '/dengbao/project-leak-scan'
+                ...projectManagementPaths
               ]) ? 'active-parent' : ''}`}
               onClick={() => toggleMenu('dengbaoAssessment')}
             >
@@ -149,6 +152,7 @@ function Layout() {
             </div>
             {!sidebarCollapsed && expandedMenus.dengbaoAssessment && (
               <ul className="sub-menu">
+                {/* 二级菜单项 */}
                 <li>
                   <Link to="/dengbao/device-usage" className={`sub-nav-link ${isActive('/dengbao/device-usage') ? 'active' : ''}`} onClick={closeMobileSidebar}>
                     📱 设备用途管理
@@ -169,23 +173,16 @@ function Layout() {
                     🏷️ 测评类型管理
                   </Link>
                 </li>
-                {/* 测评项目管理 - 带三级子菜单 */}
-                <li className="sub-nav-item">
+                
+                {/* 测评项目管理 - 二级菜单（带三级子菜单） */}
+                <li className="sub-nav-parent">
                   <div 
-                    className={`sub-nav-header ${isSubMenuActive([
-                      '/dengbao/project-management',
-                      '/dengbao/project-assets',
-                      '/dengbao/project-leak-scan'
-                    ]) ? 'active-parent' : ''}`}
+                    className={`sub-nav-header ${isSubMenuActive(projectManagementPaths) ? 'active-parent' : ''}`}
                     onClick={() => toggleMenu('projectManagement')}
                   >
                     <span className="sub-nav-icon">🗂️</span>
-                    {!sidebarCollapsed && (
-                      <>
-                        <span className="sub-nav-text">测评项目管理</span>
-                        <span className={`arrow ${expandedMenus.projectManagement ? 'expanded' : ''}`}>▼</span>
-                      </>
-                    )}
+                    <span className="sub-nav-text">测评项目管理</span>
+                    <span className={`arrow ${expandedMenus.projectManagement ? 'expanded' : ''}`}>▼</span>
                   </div>
                   {expandedMenus.projectManagement && (
                     <ul className="sub-menu-level3">
