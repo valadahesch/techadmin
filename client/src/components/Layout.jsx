@@ -151,12 +151,12 @@ function Layout() {
                 </li>
                 <li>
                   <Link to="/dengbao/assessment-items" className={`sub-nav-link ${isActive('/dengbao/assessment-items') ? 'active' : ''}`} onClick={closeMobileSidebar}>
-                    📝 测评项管理
+                    🏷️ 测评项管理
                   </Link>
                 </li>
                 <li>
                   <Link to="/dengbao/assessment-types" className={`sub-nav-link ${isActive('/dengbao/assessment-types') ? 'active' : ''}`} onClick={closeMobileSidebar}>
-                    🏷️ 测评类型管理
+                    📝 测评类型管理
                   </Link>
                 </li>
                 
