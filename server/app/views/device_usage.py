@@ -106,3 +106,19 @@ def init_device_usage_routes(bp):
         """获取设备类型列表"""
         device_types = device_usage_repo.get_device_types()
         return jsonify(device_types), 200
+    
+    @bp.route('/device-usage/list', methods=['GET'])
+    @api_permission_required()
+    def get_device_usage_list_for_select():
+        """获取设备用途列表（用于下拉选择）"""
+        result = device_usage_repo.get_all_no_pagination(search="启用")
+        
+        items = []
+        for item in result.get('items', []):
+            items.append({
+                'id': item['id'],
+                'device_name': item['device_name'],
+                'device_type': item['device_type']
+            })
+        
+        return jsonify({'items': items}), 200

@@ -84,7 +84,7 @@ class ProjectAssetRepository:
             existing = self.get_by_id_raw(new_id)
             if not existing:
                 return new_id
-    
+            
     def create(self, data, current_user_id):
         """创建资产"""
         new_id = self._generate_unique_id()
@@ -93,6 +93,8 @@ class ProjectAssetRepository:
             id=new_id,
             project_id=data.get('project_id'),
             assessment_type_id=data.get('assessment_type_id'),
+            device_usage_id=data.get('device_usage_id'),
+            device_usage_name=data.get('device_usage_name'),
             serial_no=data.get('serial_no'),
             device_name=data.get('device_name'),
             host_address=data.get('host_address', ''),
@@ -112,7 +114,7 @@ class ProjectAssetRepository:
         db.session.commit()
         
         return self.get_by_id(new_id)
-    
+
     def update(self, asset_id, data, current_user_id):
         """更新资产"""
         asset = self.get_by_id_raw(asset_id)
@@ -121,6 +123,10 @@ class ProjectAssetRepository:
         
         if 'assessment_type_id' in data:
             asset.assessment_type_id = data['assessment_type_id']
+        if 'device_usage_id' in data:
+            asset.device_usage_id = data['device_usage_id']
+        if 'device_usage_name' in data:
+            asset.device_usage_name = data['device_usage_name']
         if 'serial_no' in data:
             asset.serial_no = data['serial_no']
         if 'device_name' in data:

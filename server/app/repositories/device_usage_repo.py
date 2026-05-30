@@ -37,7 +37,8 @@ class DeviceUsageRepository:
                 or_(
                     self.model.device_name.like(f'%{search}%'),
                     self.model.device_type.like(f'%{search}%'),
-                    self.model.function_cn.like(f'%{search}%')
+                    self.model.function_cn.like(f'%{search}%'),
+                    self.model.status.like(f'%{search}%')
                 )
             )
         

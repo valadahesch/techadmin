@@ -13,7 +13,24 @@ function ProjectAssets() {
   const [editingItem, setEditingItem] = useState(null);
   const [currentRecordAsset, setCurrentRecordAsset] = useState(null);
   const [expandedProjects, setExpandedProjects] = useState({});
-  
+  // 在 ProjectAssetsPage 组件中添加
+  const [deviceUsages, setDeviceUsages] = useState([]);
+
+  // 获取设备用途列表
+  const fetchDeviceUsages = async () => {
+    try {
+      const token = getToken();
+      const response = await fetch('http://localhost:5000/api/device-usage/list', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setDeviceUsages(data.items || []);
+      }
+    } catch (error) {
+      console.error('获取设备用途列表失败:', error);
+    }
+  };
   // 新增资产表单数据
   const [newAssetForm, setNewAssetForm] = useState({
     project_id: '',
@@ -131,6 +148,7 @@ function ProjectAssets() {
   useEffect(() => {
     fetchProjects();
     fetchAssessmentTypes();
+    fetchDeviceUsages(); 
   }, []);
 
   useEffect(() => {
@@ -544,6 +562,8 @@ function ProjectAssets() {
           newAssetForm={newAssetForm}
           setNewAssetForm={setNewAssetForm}
           projectAssets={projectAssets}
+          deviceUsages={deviceUsages}
+          importanceOptions={importanceOptions}
         />
       )}
 
@@ -562,24 +582,48 @@ function ProjectAssets() {
   );
 }
 
-// 资产模态框
-function AssetModal({ item, onSave, onClose, projects, assessmentTypes, deviceTypeOptions, importanceOptions, newAssetForm, setNewAssetForm, projectAssets }) {
+// 资产模态框 - 修改设备类型选择框
+function AssetModal({ item, onSave, onClose, projects, assessmentTypes, deviceUsages, importanceOptions, projectAssets }) {
   const [formData, setFormData] = useState(
     item || {
-      project_id: newAssetForm.project_id,
-      assessment_type_id: newAssetForm.assessment_type_id,
-      serial_no: newAssetForm.serial_no,
-      device_name: newAssetForm.device_name,
-      host_address: newAssetForm.host_address,
-      hardware_model: newAssetForm.hardware_model,
-      software_version: newAssetForm.software_version,
-      is_virtual: newAssetForm.is_virtual,
-      domain: newAssetForm.domain,
-      device_type: newAssetForm.device_type,
-      importance: newAssetForm.importance,
-      quantity: newAssetForm.quantity
+      project_id: '',
+      assessment_type_id: '',
+      device_usage_id: '',
+      device_usage_name: '',
+      serial_no: 1,
+      device_name: '',
+      host_address: '',
+      hardware_model: '',
+      software_version: '',
+      is_virtual: '否',
+      domain: '',
+      device_type: '',
+      importance: '中',
+      quantity: 1
     }
   );
+
+  // 当选择设备用途时，自动填充设备类型和设备名称
+  const handleDeviceUsageChange = (deviceUsageId) => {
+    const selectedDevice = deviceUsages.find(d => d.id === deviceUsageId);
+    if (selectedDevice) {
+      setFormData({
+        ...formData,
+        device_usage_id: selectedDevice.id,
+        device_usage_name: selectedDevice.device_name,
+        device_type: selectedDevice.device_type,
+        device_name: selectedDevice.device_name
+      });
+    } else {
+      setFormData({
+        ...formData,
+        device_usage_id: '',
+        device_usage_name: '',
+        device_type: '',
+        device_name: ''
+      });
+    }
+  };
 
   // 当选择项目时，自动计算序号
   const handleProjectChange = (projectId) => {
@@ -626,7 +670,23 @@ function AssetModal({ item, onSave, onClose, projects, assessmentTypes, deviceTy
               </select>
             </div>
           </div>
+          
           <div className="form-row">
+            <div className="form-group">
+              <label>设备用途 *</label>
+              <select 
+                value={formData.device_usage_id} 
+                onChange={(e) => handleDeviceUsageChange(e.target.value)}
+                required
+              >
+                <option value="">请选择设备用途</option>
+                {deviceUsages.map(device => (
+                  <option key={device.id} value={device.id}>
+                    {device.device_name} ({device.device_type})
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="form-group">
               <label>序号 *</label>
               <input 
@@ -636,6 +696,9 @@ function AssetModal({ item, onSave, onClose, projects, assessmentTypes, deviceTy
                 required 
               />
             </div>
+          </div>
+          
+          <div className="form-row">
             <div className="form-group">
               <label>设备名称 *</label>
               <input 
@@ -645,7 +708,19 @@ function AssetModal({ item, onSave, onClose, projects, assessmentTypes, deviceTy
                 required 
               />
             </div>
+            <div className="form-group">
+              <label>设备类型</label>
+              <input 
+                type="text" 
+                value={formData.device_type} 
+                onChange={(e) => setFormData({...formData, device_type: e.target.value})} 
+                readOnly
+                style={{ backgroundColor: '#f8fafc' }}
+              />
+              <small style={{ color: '#64748b' }}>根据设备用途自动填充</small>
+            </div>
           </div>
+          
           <div className="form-row">
             <div className="form-group">
               <label>主机地址</label>
@@ -664,6 +739,7 @@ function AssetModal({ item, onSave, onClose, projects, assessmentTypes, deviceTy
               />
             </div>
           </div>
+          
           <div className="form-row">
             <div className="form-group">
               <label>软件版本</label>
@@ -684,6 +760,7 @@ function AssetModal({ item, onSave, onClose, projects, assessmentTypes, deviceTy
               </select>
             </div>
           </div>
+          
           <div className="form-row">
             <div className="form-group">
               <label>域名</label>
@@ -694,18 +771,6 @@ function AssetModal({ item, onSave, onClose, projects, assessmentTypes, deviceTy
               />
             </div>
             <div className="form-group">
-              <label>设备类型</label>
-              <select 
-                value={formData.device_type} 
-                onChange={(e) => setFormData({...formData, device_type: e.target.value})}
-              >
-                <option value="">请选择</option>
-                {deviceTypeOptions.map(type => <option key={type} value={type}>{type}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
               <label>重要程度</label>
               <select 
                 value={formData.importance} 
@@ -714,6 +779,9 @@ function AssetModal({ item, onSave, onClose, projects, assessmentTypes, deviceTy
                 {importanceOptions.map(imp => <option key={imp} value={imp}>{imp}</option>)}
               </select>
             </div>
+          </div>
+          
+          <div className="form-row">
             <div className="form-group">
               <label>数量</label>
               <input 
@@ -724,6 +792,7 @@ function AssetModal({ item, onSave, onClose, projects, assessmentTypes, deviceTy
               />
             </div>
           </div>
+          
           <div className="modal-actions">
             <button type="submit" className="btn-primary">保存</button>
             <button type="button" className="btn-secondary" onClick={onClose}>取消</button>

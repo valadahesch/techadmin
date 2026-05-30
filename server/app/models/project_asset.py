@@ -12,6 +12,8 @@ class ProjectAsset(db.Model):
     id = db.Column(db.String(20), primary_key=True, comment='20位UUID主键')
     project_id = db.Column(db.String(20), nullable=False, comment='项目ID')
     assessment_type_id = db.Column(db.String(20), nullable=True, comment='测评类型ID')
+    device_usage_id = db.Column(db.String(20), nullable=True, comment='设备用途ID')
+    device_usage_name = db.Column(db.String(200), nullable=True, comment='设备用途名称')
     serial_no = db.Column(db.Integer, nullable=False, comment='序号')
     device_name = db.Column(db.String(200), nullable=False, comment='设备名称')
     host_address = db.Column(db.String(100), nullable=True, comment='主机地址')
@@ -40,6 +42,8 @@ class ProjectAsset(db.Model):
             'id': self.id,
             'project_id': self.project_id,
             'assessment_type_id': self.assessment_type_id,
+            'device_usage_id': self.device_usage_id,
+            'device_usage_name': self.device_usage_name,
             'serial_no': self.serial_no,
             'device_name': self.device_name,
             'host_address': self.host_address or '',
