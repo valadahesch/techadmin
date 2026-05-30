@@ -93,24 +93,10 @@ function Layout() {
       <nav className={`sidebar ${mobileSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           {!sidebarCollapsed && <h2>安全管理系统</h2>}
-          {sidebarCollapsed && <div className="logo-mini">🔒</div>}
+          {/* {sidebarCollapsed && <div className="logo-mini"></div>} */}
           <button onClick={toggleSidebar} className="collapse-btn">
             {sidebarCollapsed ? '→' : '←'}
           </button>
-        </div>
-        
-        <div className="user-info-mini">
-          {!sidebarCollapsed ? (
-            <div className="user-info">
-              <span className="username">{user?.username}</span>
-              <button onClick={handleLogout} className="logout-btn">退出</button>
-            </div>
-          ) : (
-            <div className="user-info-collapsed">
-              <span className="user-icon">👤</span>
-              <button onClick={handleLogout} className="logout-icon" title="退出">🚪</button>
-            </div>
-          )}
         </div>
         
         <ul className="nav-menu">
@@ -245,6 +231,21 @@ function Layout() {
             </li>
           )}
         </ul>
+
+        <div className="user-info-mini">
+          {!sidebarCollapsed ? (
+            <div className="user-info">
+              <span className="username">{user?.username}</span>
+              <button onClick={handleLogout} className="logout-btn">退出</button>
+            </div>
+          ) : (
+            <div className="user-info-collapsed">
+              <span className="user-icon">👤</span>
+              <button onClick={handleLogout} className="logout-icon" title="退出">🚪</button>
+            </div>
+          )}
+        </div>
+        
       </nav>
       
       <main className="main-content" onClick={closeMobileSidebar}>
