@@ -11,13 +11,10 @@ import PermissionManagement from './components/SystemSettings/PermissionManageme
 import DeviceUsageManagement from './components/Dengbao/DeviceUsageManagement';
 import IndicatorManagement from './components/Dengbao/IndicatorManagement';
 import AssessmentItemManagement from './components/Dengbao/AssessmentItemManagement';
-// import RuleManagement from './components/Dengbao/RuleManagement';
-import ProjectManagement from './components/Dengbao/ProjectManagement';
 import AssessmentTypeManagement from './components/Dengbao/AssessmentTypeManagement';
-// import './App.css';
-import ProjectManagementPage from './components/Dengbao/ProjectManagementPage';
-import ProjectAssetsPage from './components/Dengbao/ProjectAssetsPage';
-import ProjectLeakScanPage from './components/Dengbao/ProjectLeakScanPage';
+import ProjectManagement from './components/Dengbao/Project/ProjectManagement';
+import ProjectAssets from './components/Dengbao/Project/ProjectAssets';
+import ProjectLeakScan from './components/Dengbao/Project/ProjectLeakScan';
 
 function App() {
   return (
@@ -73,16 +70,6 @@ function App() {
               <AssessmentItemManagement />
             </ProtectedRoute>
           } />
-          {/* <Route path="/dengbao/rules" element={
-            <ProtectedRoute requiredPage="dengbao:rule">
-              <RuleManagement />
-            </ProtectedRoute>
-          } /> */}
-          <Route path="/dengbao/projects" element={
-            <ProtectedRoute requiredPage="dengbao:project">
-              <ProjectManagement />
-            </ProtectedRoute>
-          } />
           <Route path="/dengbao/assessment-types" element={
             <ProtectedRoute requiredPage="dengbao:assessment-type">
               <AssessmentTypeManagement />
@@ -90,17 +77,17 @@ function App() {
           } />
           <Route path="/dengbao/project-management" element={
             <ProtectedRoute>
-              <ProjectManagementPage />
+              <ProjectManagement />
             </ProtectedRoute>
           } />
           <Route path="/dengbao/project-assets" element={
             <ProtectedRoute>
-              <ProjectAssetsPage />
+              <ProjectAssets />
             </ProtectedRoute>
           } />
           <Route path="/dengbao/project-leak-scan" element={
             <ProtectedRoute>
-              <ProjectLeakScanPage />
+              <ProjectLeakScan />
             </ProtectedRoute>
           } />
           </Route>

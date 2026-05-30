@@ -1,8 +1,8 @@
-// client/src/components/Dengbao/ProjectLeakScanPage.jsx
+// client/src/components/Dengbao/Project/ProjectLeakScanPage.jsx
 import React, { useState } from 'react';
-import '../../styles/projectPages.css';
+import '../../../styles/Dengbao/Project/projectPages.css';
 
-function ProjectLeakScanPage() {
+function ProjectLeakScan() {
   const [scanTasks] = useState([
     { id: 1, name: '核心交换机漏洞扫描', target: '10.0.0.1', status: '已完成', risk: '中危', time: '2026-05-28 10:30' },
     { id: 2, name: '防火墙安全检测', target: '10.0.0.2', status: '进行中', risk: '-', time: '2026-05-29 09:00' },
@@ -33,4 +33,4 @@ function ProjectLeakScanPage() {
   );
 }
 
-export default ProjectLeakScanPage;
+export default ProjectLeakScan;

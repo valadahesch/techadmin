@@ -1,8 +1,8 @@
 // client/src/components/Dengbao/ProjectManagementPage.jsx
 import React, { useState } from 'react';
-import '../../styles/projectPages.css';
+import '../../../styles/Dengbao/Project/projectPages.css';
 
-function ProjectManagementPage() {
+function ProjectManagement() {
   const [projects, setProjects] = useState([
     { id: 1, name: 'XX政务云平台等保测评', customer: 'XX市政务服务局', level: '三级', status: '进行中', progress: 65 },
     { id: 2, name: 'XX医院信息系统等保测评', customer: 'XX市人民医院', level: '三级', status: '已完成', progress: 100 },
@@ -54,4 +54,4 @@ function ProjectManagementPage() {
   );
 }
 
-export default ProjectManagementPage;
+export default ProjectManagement;

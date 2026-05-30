@@ -1,8 +1,8 @@
 // client/src/components/Dengbao/ProjectAssetsPage.jsx
 import React, { useState } from 'react';
-import '../../styles/projectPages.css';
+import '../../../styles/Dengbao/Project/projectPages.css';
 
-function ProjectAssetsPage() {
+function ProjectAssets() {
   const [assets] = useState([
     { id: 1, name: '核心交换机', type: '网络设备', model: 'S12708', ip: '10.0.0.1', status: '在线' },
     { id: 2, name: '防火墙', type: '安全设备', model: 'USG6650', ip: '10.0.0.2', status: '在线' },
@@ -29,4 +29,4 @@ function ProjectAssetsPage() {
   );
 }
 
-export default ProjectAssetsPage;
+export default ProjectAssets;
