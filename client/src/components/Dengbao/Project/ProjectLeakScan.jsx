@@ -1,6 +1,6 @@
 // client/src/components/Dengbao/Project/ProjectLeakScanPage.jsx
 import React, { useState } from 'react';
-import '../../../styles/Dengbao/Project/projectPages.css';
+import '../../../styles/Dengbao/Project/projectAssets.css';
 
 function ProjectLeakScan() {
   const [scanTasks] = useState([

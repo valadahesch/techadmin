@@ -129,9 +129,8 @@ function ProjectManagement() {
 
   // 跳转到资产管理页面
   const goToAssets = (projectId) => {
-    navigate(`/dengbao/project-assets/${projectId}`);
+    navigate(`/dengbao/project-assets`);
   };
-
   // 切换排序
   const handleSort = (field) => {
     if (sortField === field) {

@@ -4,25 +4,40 @@
 from flask import request, jsonify, g
 from app.repositories.project_asset_repo import project_asset_repo
 from app.repositories.assessment_type_repo import assessment_type_repo
+from app.repositories.project_management_repo import project_management_repo
 from app.decorators import api_permission_required
 
 def init_project_asset_routes(bp):
     """初始化项目资产管理相关路由"""
     
-    @bp.route('/project-assets/<project_id>', methods=['GET'])
+    @bp.route('/project-assets', methods=['GET'])
     @api_permission_required()
-    def get_project_assets(project_id):
-        """获取项目资产列表"""
+    def get_all_project_assets():
+        """获取所有项目资产列表（按项目分组）"""
         current_user_id = getattr(g, 'current_user_id', None)
         is_admin = False
         
-        assets = project_asset_repo.get_by_project_id(
-            project_id=project_id,
+        # 获取用户的所有项目
+        projects = project_management_repo.get_all(
+            page=1, 
+            per_page=1000, 
             current_user_id=current_user_id,
             is_admin=is_admin
         )
         
-        return jsonify({'items': assets}), 200
+        result = []
+        for project in projects.get('items', []):
+            assets = project_asset_repo.get_by_project_id(
+                project_id=project['id'],
+                current_user_id=current_user_id,
+                is_admin=is_admin
+            )
+            result.append({
+                'project': project,
+                'assets': assets
+            })
+        
+        return jsonify({'items': result}), 200
     
     @bp.route('/project-assets', methods=['POST'])
     @api_permission_required()

@@ -1,19 +1,34 @@
 // client/src/components/Dengbao/ProjectAssetsPage.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import '../../../styles/Dengbao/Project/projectManagement.css';
+import AssessmentRecordModal from './AssessmentRecordModal';
+import '../../../styles/Dengbao/Project/projectAssets.css';
 
 function ProjectAssets() {
-  const { projectId } = useParams();
-  const navigate = useNavigate();
-  const [assets, setAssets] = useState([]);
-  const [projectInfo, setProjectInfo] = useState(null);
+  const [projectAssets, setProjectAssets] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [assessmentTypes, setAssessmentTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showRecordModal, setShowRecordModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [currentRecordAsset, setCurrentRecordAsset] = useState(null);
+  const [expandedProjects, setExpandedProjects] = useState({});
+  
+  // 新增资产表单数据
+  const [newAssetForm, setNewAssetForm] = useState({
+    project_id: '',
+    assessment_type_id: '',
+    serial_no: 1,
+    device_name: '',
+    host_address: '',
+    hardware_model: '',
+    software_version: '',
+    is_virtual: '否',
+    domain: '',
+    device_type: '',
+    importance: '中',
+    quantity: 1
+  });
   
   // 筛选条件
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -43,19 +58,19 @@ function ProjectAssets() {
 
   const getToken = () => localStorage.getItem('access_token');
 
-  // 获取项目信息
-  const fetchProjectInfo = async () => {
+  // 获取项目列表
+  const fetchProjects = async () => {
     try {
       const token = getToken();
-      const response = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+      const response = await fetch('http://localhost:5000/api/projects?page=1&per_page=1000', {
         headers: { 'Authorization': 'Bearer ' + token }
       });
       if (response.ok) {
         const data = await response.json();
-        setProjectInfo(data);
+        setProjects(data.items || []);
       }
     } catch (error) {
-      console.error('获取项目信息失败:', error);
+      console.error('获取项目列表失败:', error);
     }
   };
 
@@ -75,54 +90,80 @@ function ProjectAssets() {
     }
   };
 
-  // 获取资产列表
-  const fetchAssets = async () => {
+  // 获取所有项目资产
+  const fetchAllProjectAssets = async () => {
     setLoading(true);
     try {
       const token = getToken();
-      const response = await fetch(`http://localhost:5000/api/project-assets/${projectId}`, {
+      const response = await fetch('http://localhost:5000/api/project-assets', {
         headers: { 'Authorization': 'Bearer ' + token }
       });
 
       if (response.ok) {
         const data = await response.json();
         // 为每个资产添加测评类型名称
-        const assetsWithTypeName = data.items.map(asset => {
-          const type = assessmentTypes.find(t => t.id === asset.assessment_type_id);
-          return { ...asset, assessment_type_name: type?.name || '-' };
+        const processedData = data.items.map(item => {
+          const assetsWithTypeName = item.assets.map(asset => {
+            const type = assessmentTypes.find(t => t.id === asset.assessment_type_id);
+            return { ...asset, assessment_type_name: type?.name || '-' };
+          });
+          return {
+            ...item,
+            assets: assetsWithTypeName
+          };
         });
-        setAssets(assetsWithTypeName);
+        setProjectAssets(processedData);
+        
+        // 默认展开所有项目
+        const expanded = {};
+        processedData.forEach(item => {
+          expanded[item.project.id] = true;
+        });
+        setExpandedProjects(expanded);
       }
     } catch (error) {
-      console.error('获取资产列表失败:', error);
+      console.error('获取项目资产失败:', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (projectId) {
-      fetchProjectInfo();
-      fetchAssessmentTypes();
-    }
-  }, [projectId]);
+    fetchProjects();
+    fetchAssessmentTypes();
+  }, []);
 
   useEffect(() => {
     if (assessmentTypes.length > 0) {
-      fetchAssets();
+      fetchAllProjectAssets();
     }
   }, [assessmentTypes]);
 
-  // 筛选资产
-  const filteredAssets = assets.filter(asset => {
-    if (searchKeyword && !asset.device_name.toLowerCase().includes(searchKeyword.toLowerCase()) &&
-        !(asset.host_address || '').toLowerCase().includes(searchKeyword.toLowerCase())) {
-      return false;
-    }
-    if (filterDeviceType && asset.device_type !== filterDeviceType) return false;
-    if (filterImportance && asset.importance !== filterImportance) return false;
-    return true;
-  });
+  // 切换项目展开/收起
+  const toggleProject = (projectId) => {
+    setExpandedProjects({
+      ...expandedProjects,
+      [projectId]: !expandedProjects[projectId]
+    });
+  };
+
+  // 展开所有项目
+  const expandAll = () => {
+    const expanded = {};
+    projectAssets.forEach(item => {
+      expanded[item.project.id] = true;
+    });
+    setExpandedProjects(expanded);
+  };
+
+  // 收起所有项目
+  const collapseAll = () => {
+    const expanded = {};
+    projectAssets.forEach(item => {
+      expanded[item.project.id] = false;
+    });
+    setExpandedProjects(expanded);
+  };
 
   const handleDelete = async (id, name) => {
     if (window.confirm(`确定要删除资产 "${name}" 吗？`)) {
@@ -134,7 +175,7 @@ function ProjectAssets() {
         });
 
         if (response.ok) {
-          fetchAssets();
+          fetchAllProjectAssets();
         } else {
           alert('删除失败');
         }
@@ -152,24 +193,20 @@ function ProjectAssets() {
         : 'http://localhost:5000/api/project-assets';
       const method = editingItem ? 'PUT' : 'POST';
 
-      const submitData = {
-        ...data,
-        project_id: projectId
-      };
-
       const response = await fetch(url, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + token
         },
-        body: JSON.stringify(submitData)
+        body: JSON.stringify(data)
       });
 
       if (response.ok) {
-        fetchAssets();
+        fetchAllProjectAssets();
         setShowModal(false);
         setEditingItem(null);
+        resetNewAssetForm();
       } else {
         const error = await response.json();
         alert(error.error || '保存失败');
@@ -197,7 +234,7 @@ function ProjectAssets() {
       });
 
       if (response.ok) {
-        fetchAssets();
+        fetchAllProjectAssets();
         setShowRecordModal(false);
         setCurrentRecordAsset(null);
       } else {
@@ -208,11 +245,43 @@ function ProjectAssets() {
     }
   };
 
-  // 获取下一个序号
-  const getNextSerialNo = () => {
-    if (assets.length === 0) return 1;
-    const maxSerial = Math.max(...assets.map(a => a.serial_no));
-    return maxSerial + 1;
+  // 重置新增表单
+  const resetNewAssetForm = () => {
+    setNewAssetForm({
+      project_id: '',
+      assessment_type_id: '',
+      serial_no: 1,
+      device_name: '',
+      host_address: '',
+      hardware_model: '',
+      software_version: '',
+      is_virtual: '否',
+      domain: '',
+      device_type: '',
+      importance: '中',
+      quantity: 1
+    });
+  };
+
+  // 打开新增弹窗
+  const openAddModal = () => {
+    // 获取当前最大序号
+    const currentProjectAssets = projectAssets.find(p => p.project.id === newAssetForm.project_id);
+    const maxSerial = currentProjectAssets 
+      ? Math.max(...currentProjectAssets.assets.map(a => a.serial_no), 0) 
+      : 0;
+    setNewAssetForm({
+      ...newAssetForm,
+      serial_no: maxSerial + 1
+    });
+    setEditingItem(null);
+    setShowModal(true);
+  };
+
+  // 打开编辑弹窗
+  const openEditModal = (asset) => {
+    setEditingItem(asset);
+    setShowModal(true);
   };
 
   const getImportanceClass = (importance) => {
@@ -222,6 +291,26 @@ function ProjectAssets() {
       '低': 'importance-low' 
     };
     return classes[importance] || 'importance-medium';
+  };
+
+  // 筛选资产（所有项目中的资产）
+  const getFilteredProjectAssets = () => {
+    if (!searchKeyword && !filterDeviceType && !filterImportance) {
+      return projectAssets;
+    }
+    
+    return projectAssets.map(projectAsset => ({
+      ...projectAsset,
+      assets: projectAsset.assets.filter(asset => {
+        if (searchKeyword && !asset.device_name.toLowerCase().includes(searchKeyword.toLowerCase()) &&
+            !(asset.host_address || '').toLowerCase().includes(searchKeyword.toLowerCase())) {
+          return false;
+        }
+        if (filterDeviceType && asset.device_type !== filterDeviceType) return false;
+        if (filterImportance && asset.importance !== filterImportance) return false;
+        return true;
+      })
+    })).filter(item => item.assets.length > 0);
   };
 
   const columns = [
@@ -244,6 +333,7 @@ function ProjectAssets() {
   ];
 
   const visibleColumnsList = columns.filter(col => col.visible);
+  const filteredProjectAssets = getFilteredProjectAssets();
 
   const formatId = (id) => {
     if (!id) return '-';
@@ -255,18 +345,14 @@ function ProjectAssets() {
   const importanceOptions = ['高', '中', '低'];
 
   return (
-    <div className="project-assets-container">
+    <div className="project-assets-page">
       <div className="page-header">
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <button className="btn-back" onClick={() => navigate('/dengbao/project-management')}>← 返回</button>
-          <h1 style={{ marginLeft: '16px' }}>项目资产 - {projectInfo?.company_name || '加载中...'}</h1>
-        </div>
+        <h1>项目资产管理</h1>
         <div className="header-buttons">
+          <button className="btn-secondary" onClick={expandAll}>📂 展开全部</button>
+          <button className="btn-secondary" onClick={collapseAll}>📁 收起全部</button>
           <button className="btn-secondary" onClick={() => setShowColumnConfig(!showColumnConfig)}>📋 列设置</button>
-          <button className="btn-primary" onClick={() => { 
-            setEditingItem(null); 
-            setShowModal(true);
-          }}>+ 新增资产</button>
+          <button className="btn-primary" onClick={openAddModal}>+ 新增资产</button>
         </div>
       </div>
 
@@ -274,18 +360,13 @@ function ProjectAssets() {
         <div className="column-config-panel">
           <div className="panel-header">
             <span>选择要显示的列</span>
-            <button 
-              onClick={() => setVisibleColumns({
-                serial_no: true, device_name: true, host_address: true, 
-                hardware_model: false, software_version: false, is_virtual: false, 
-                domain: false, device_type: true, importance: true, quantity: true, 
-                assessment_type: true, assessment_record: true, 
-                creator_name: false, updater_name: false, created_at: false, updated_at: false
-              })} 
-              className="btn-reset"
-            >
-              重置默认
-            </button>
+            <button onClick={() => setVisibleColumns({
+              serial_no: true, device_name: true, host_address: true, 
+              hardware_model: false, software_version: false, is_virtual: false, 
+              domain: false, device_type: true, importance: true, quantity: true, 
+              assessment_type: true, assessment_record: true, 
+              creator_name: false, updater_name: false, created_at: false, updated_at: false
+            })} className="btn-reset">重置默认</button>
             <button onClick={() => setShowColumnConfig(false)} className="btn-close">✕</button>
           </div>
           <div className="column-options">
@@ -305,16 +386,16 @@ function ProjectAssets() {
 
       <div className="stats-summary">
         <div className="stat-item">
+          <span className="stat-label">项目总数</span>
+          <span className="stat-value">{projectAssets.length}</span>
+        </div>
+        <div className="stat-item">
           <span className="stat-label">资产总数</span>
-          <span className="stat-value">{assets.length}</span>
+          <span className="stat-value">{projectAssets.reduce((sum, p) => sum + p.assets.length, 0)}</span>
         </div>
         <div className="stat-item">
-          <span className="stat-label">网络设备</span>
-          <span className="stat-value">{assets.filter(a => a.device_type === '网络设备').length}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">安全设备</span>
-          <span className="stat-value">{assets.filter(a => a.device_type === '安全设备').length}</span>
+          <span className="stat-label">设备类型</span>
+          <span className="stat-value">{deviceTypeOptions.length}</span>
         </div>
       </div>
 
@@ -347,86 +428,103 @@ function ProjectAssets() {
         </select>
       </div>
 
-      <div className="data-table">
-        <table className="asset-table">
-          <thead>
-            <tr>
-              <th style={{ width: '60px' }}>ID</th>
-              {visibleColumnsList.map(col => (
-                <th key={col.key}>{col.label}</th>
-              ))}
-              <th style={{ width: '180px' }}>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={visibleColumnsList.length + 2} className="loading-cell">加载中...</td>
-              </tr>
-            ) : filteredAssets.length === 0 ? (
-              <tr>
-                <td colSpan={visibleColumnsList.length + 2} className="empty-cell">暂无数据</td>
-              </tr>
-            ) : (
-              filteredAssets.map(item => (
-                <tr key={item.id}>
-                  <td className="id-cell" title={item.id}>{formatId(item.id)}</td>
-                  {visibleColumns.serial_no && <td>{item.serial_no}</td>}
-                  {visibleColumns.device_name && <td><strong>{item.device_name}</strong></td>}
-                  {visibleColumns.host_address && <td>{item.host_address || '-'}</td>}
-                  {visibleColumns.hardware_model && <td>{item.hardware_model || '-'}</td>}
-                  {visibleColumns.software_version && <td>{item.software_version || '-'}</td>}
-                  {visibleColumns.is_virtual && <td>{item.is_virtual || '否'}</td>}
-                  {visibleColumns.domain && <td>{item.domain || '-'}</td>}
-                  {visibleColumns.device_type && <td>{item.device_type || '-'}</td>}
-                  {visibleColumns.importance && (
-                    <td>
-                      <span className={`importance-badge ${getImportanceClass(item.importance)}`}>
-                        {item.importance}
-                      </span>
-                    </td>
-                  )}
-                  {visibleColumns.quantity && <td>{item.quantity || 1}</td>}
-                  {visibleColumns.assessment_type && <td>{item.assessment_type_name || '-'}</td>}
-                  {visibleColumns.assessment_record && (
-                    <td>
-                      <button 
-                        className="btn-record" 
-                        onClick={() => { 
-                          setCurrentRecordAsset(item); 
-                          setShowRecordModal(true); 
-                        }}
-                      >
-                        📝 查看记录
-                      </button>
-                    </td>
-                  )}
-                  {visibleColumns.creator_name && <td>{item.creator_name || '-'}</td>}
-                  {visibleColumns.updater_name && <td>{item.updater_name || '-'}</td>}
-                  {visibleColumns.created_at && <td>{item.created_at ? new Date(item.created_at).toLocaleString() : '-'}</td>}
-                  {visibleColumns.updated_at && <td>{item.updated_at ? new Date(item.updated_at).toLocaleString() : '-'}</td>}
-                  <td>
-                    <button 
-                      className="btn-edit" 
-                      onClick={() => { 
-                        setEditingItem(item); 
-                        setShowModal(true); 
-                      }}
-                    >
-                      编辑
-                    </button>
-                    <button 
-                      className="btn-delete" 
-                      onClick={() => handleDelete(item.id, item.device_name)}
-                    >
-                      删除
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="projects-assets-container">
+        {loading ? (
+          <div className="loading-state">加载中...</div>
+        ) : filteredProjectAssets.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">📭</div>
+            <p>暂无资产数据</p>
+            <button className="btn-primary" onClick={openAddModal}>新增资产</button>
+          </div>
+        ) : (
+          filteredProjectAssets.map(projectAsset => (
+            <div key={projectAsset.project.id} className="project-asset-group">
+              <div 
+                className="project-header"
+                onClick={() => toggleProject(projectAsset.project.id)}
+              >
+                <div className="project-info">
+                  <span className="expand-icon">{expandedProjects[projectAsset.project.id] ? '📂' : '📁'}</span>
+                  <span className="project-name">{projectAsset.project.company_name}</span>
+                  <span className="project-no">({projectAsset.project.project_no})</span>
+                  <span className="asset-count-badge">{projectAsset.assets.length} 个资产</span>
+                </div>
+                <div className="project-meta">
+                  <span className="project-status">{projectAsset.project.status}</span>
+                  <span className="project-contact">{projectAsset.project.contact_person}</span>
+                </div>
+              </div>
+              
+              {expandedProjects[projectAsset.project.id] && (
+                <div className="assets-table-wrapper">
+                  <table className="asset-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '60px' }}>ID</th>
+                        {visibleColumnsList.map(col => (
+                          <th key={col.key}>{col.label}</th>
+                        ))}
+                        <th style={{ width: '200px' }}>操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {projectAsset.assets.length === 0 ? (
+                        <tr>
+                          <td colSpan={visibleColumnsList.length + 2} className="empty-cell">暂无资产，点击"新增资产"添加</td>
+                        </tr>
+                      ) : (
+                        projectAsset.assets.map(asset => (
+                          <tr key={asset.id}>
+                            <td className="id-cell" title={asset.id}>{formatId(asset.id)}</td>
+                            {visibleColumns.serial_no && <td>{asset.serial_no}</td>}
+                            {visibleColumns.device_name && <td><strong>{asset.device_name}</strong></td>}
+                            {visibleColumns.host_address && <td>{asset.host_address || '-'}</td>}
+                            {visibleColumns.hardware_model && <td>{asset.hardware_model || '-'}</td>}
+                            {visibleColumns.software_version && <td>{asset.software_version || '-'}</td>}
+                            {visibleColumns.is_virtual && <td>{asset.is_virtual || '否'}</td>}
+                            {visibleColumns.domain && <td>{asset.domain || '-'}</td>}
+                            {visibleColumns.device_type && <td>{asset.device_type || '-'}</td>}
+                            {visibleColumns.importance && (
+                              <td>
+                                <span className={`importance-badge ${getImportanceClass(asset.importance)}`}>
+                                  {asset.importance}
+                                </span>
+                              </td>
+                            )}
+                            {visibleColumns.quantity && <td>{asset.quantity || 1}</td>}
+                            {visibleColumns.assessment_type && <td>{asset.assessment_type_name || '-'}</td>}
+                            {visibleColumns.assessment_record && (
+                              <td>
+                                <button 
+                                  className="btn-record" 
+                                  onClick={() => { 
+                                    setCurrentRecordAsset(asset); 
+                                    setShowRecordModal(true); 
+                                  }}
+                                >
+                                  📝 测评记录
+                                </button>
+                              </td>
+                            )}
+                            {visibleColumns.creator_name && <td>{asset.creator_name || '-'}</td>}
+                            {visibleColumns.updater_name && <td>{asset.updater_name || '-'}</td>}
+                            {visibleColumns.created_at && <td>{asset.created_at ? new Date(asset.created_at).toLocaleString() : '-'}</td>}
+                            {visibleColumns.updated_at && <td>{asset.updated_at ? new Date(asset.updated_at).toLocaleString() : '-'}</td>}
+                            <td>
+                              <button className="btn-edit" onClick={() => openEditModal(asset)}>编辑</button>
+                              <button className="btn-delete" onClick={() => handleDelete(asset.id, asset.device_name)}>删除</button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
       {/* 新增/编辑资产模态框 */}
@@ -437,17 +535,21 @@ function ProjectAssets() {
           onClose={() => { 
             setShowModal(false); 
             setEditingItem(null); 
+            resetNewAssetForm();
           }} 
+          projects={projects}
           assessmentTypes={assessmentTypes}
           deviceTypeOptions={deviceTypeOptions}
           importanceOptions={importanceOptions}
-          nextSerialNo={getNextSerialNo()}
+          newAssetForm={newAssetForm}
+          setNewAssetForm={setNewAssetForm}
+          projectAssets={projectAssets}
         />
       )}
 
       {/* 测评记录弹窗 */}
       {showRecordModal && currentRecordAsset && (
-        <RecordModal
+        <AssessmentRecordModal
           asset={currentRecordAsset}
           onSave={handleSaveRecord}
           onClose={() => { 
@@ -461,20 +563,36 @@ function ProjectAssets() {
 }
 
 // 资产模态框
-function AssetModal({ item, onSave, onClose, assessmentTypes, deviceTypeOptions, importanceOptions, nextSerialNo }) {
-  const [formData, setFormData] = useState({
-    serial_no: item?.serial_no || nextSerialNo,
-    device_name: item?.device_name || '',
-    host_address: item?.host_address || '',
-    hardware_model: item?.hardware_model || '',
-    software_version: item?.software_version || '',
-    is_virtual: item?.is_virtual || '否',
-    domain: item?.domain || '',
-    device_type: item?.device_type || '',
-    importance: item?.importance || '中',
-    quantity: item?.quantity || 1,
-    assessment_type_id: item?.assessment_type_id || ''
-  });
+function AssetModal({ item, onSave, onClose, projects, assessmentTypes, deviceTypeOptions, importanceOptions, newAssetForm, setNewAssetForm, projectAssets }) {
+  const [formData, setFormData] = useState(
+    item || {
+      project_id: newAssetForm.project_id,
+      assessment_type_id: newAssetForm.assessment_type_id,
+      serial_no: newAssetForm.serial_no,
+      device_name: newAssetForm.device_name,
+      host_address: newAssetForm.host_address,
+      hardware_model: newAssetForm.hardware_model,
+      software_version: newAssetForm.software_version,
+      is_virtual: newAssetForm.is_virtual,
+      domain: newAssetForm.domain,
+      device_type: newAssetForm.device_type,
+      importance: newAssetForm.importance,
+      quantity: newAssetForm.quantity
+    }
+  );
+
+  // 当选择项目时，自动计算序号
+  const handleProjectChange = (projectId) => {
+    const selectedProject = projectAssets.find(p => p.project.id === projectId);
+    const maxSerial = selectedProject && selectedProject.assets.length > 0
+      ? Math.max(...selectedProject.assets.map(a => a.serial_no))
+      : 0;
+    setFormData({
+      ...formData,
+      project_id: projectId,
+      serial_no: maxSerial + 1
+    });
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -483,7 +601,34 @@ function AssetModal({ item, onSave, onClose, assessmentTypes, deviceTypeOptions,
         <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }}>
           <div className="form-row">
             <div className="form-group">
-              <label>序号</label>
+              <label>所属项目 *</label>
+              <select 
+                value={formData.project_id} 
+                onChange={(e) => item ? setFormData({...formData, project_id: e.target.value}) : handleProjectChange(e.target.value)}
+                required
+              >
+                <option value="">请选择项目</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>{project.company_name} ({project.project_no})</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>测评类型</label>
+              <select 
+                value={formData.assessment_type_id} 
+                onChange={(e) => setFormData({...formData, assessment_type_id: e.target.value})}
+              >
+                <option value="">请选择</option>
+                {assessmentTypes.map(type => (
+                  <option key={type.id} value={type.id}>{type.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>序号 *</label>
               <input 
                 type="number" 
                 value={formData.serial_no} 
@@ -579,90 +724,8 @@ function AssetModal({ item, onSave, onClose, assessmentTypes, deviceTypeOptions,
               />
             </div>
           </div>
-          <div className="form-group">
-            <label>测评类型</label>
-            <select 
-              value={formData.assessment_type_id} 
-              onChange={(e) => setFormData({...formData, assessment_type_id: e.target.value})}
-            >
-              <option value="">请选择</option>
-              {assessmentTypes.map(type => (
-                <option key={type.id} value={type.id}>{type.name}</option>
-              ))}
-            </select>
-          </div>
           <div className="modal-actions">
             <button type="submit" className="btn-primary">保存</button>
-            <button type="button" className="btn-secondary" onClick={onClose}>取消</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-// 测评记录弹窗
-function RecordModal({ asset, onSave, onClose }) {
-  const [record, setRecord] = useState(asset?.assessment_record || {
-    test_date: '',
-    tester: '',
-    test_result: '',
-    conclusion: '',
-    suggestions: ''
-  });
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content large" onClick={(e) => e.stopPropagation()}>
-        <h2>测评记录 - {asset.device_name}</h2>
-        <form onSubmit={(e) => { e.preventDefault(); onSave(record); }}>
-          <div className="form-row">
-            <div className="form-group">
-              <label>测试日期</label>
-              <input 
-                type="date" 
-                value={record.test_date || ''} 
-                onChange={(e) => setRecord({...record, test_date: e.target.value})} 
-              />
-            </div>
-            <div className="form-group">
-              <label>测试人员</label>
-              <input 
-                type="text" 
-                value={record.tester || ''} 
-                onChange={(e) => setRecord({...record, tester: e.target.value})} 
-              />
-            </div>
-          </div>
-          <div className="form-group">
-            <label>测试结果</label>
-            <textarea 
-              value={record.test_result || ''} 
-              onChange={(e) => setRecord({...record, test_result: e.target.value})} 
-              rows="3" 
-              placeholder="请输入测试结果..."
-            />
-          </div>
-          <div className="form-group">
-            <label>测评结论</label>
-            <textarea 
-              value={record.conclusion || ''} 
-              onChange={(e) => setRecord({...record, conclusion: e.target.value})} 
-              rows="2" 
-              placeholder="请输入测评结论..."
-            />
-          </div>
-          <div className="form-group">
-            <label>整改建议</label>
-            <textarea 
-              value={record.suggestions || ''} 
-              onChange={(e) => setRecord({...record, suggestions: e.target.value})} 
-              rows="2" 
-              placeholder="请输入整改建议..."
-            />
-          </div>
-          <div className="modal-actions">
-            <button type="submit" className="btn-primary">保存记录</button>
             <button type="button" className="btn-secondary" onClick={onClose}>取消</button>
           </div>
         </form>
