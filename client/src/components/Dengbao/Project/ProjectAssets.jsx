@@ -1,5 +1,6 @@
 // client/src/components/Dengbao/ProjectAssetsPage.jsx
 import React, { useState, useEffect } from 'react';
+import { saveAs } from 'file-saver';
 import AssessmentRecordModal from './AssessmentRecordModal';
 import '../../../styles/Dengbao/Project/projectAssets.css';
 
@@ -13,8 +14,56 @@ function ProjectAssets() {
   const [editingItem, setEditingItem] = useState(null);
   const [currentRecordAsset, setCurrentRecordAsset] = useState(null);
   const [expandedProjects, setExpandedProjects] = useState({});
-  // 在 ProjectAssetsPage 组件中添加
   const [deviceUsages, setDeviceUsages] = useState([]);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [selectedExportProject, setSelectedExportProject] = useState('');
+
+  const handleExportReport = async () => {
+    if (!selectedExportProject) {
+      alert('请选择要导出的项目');
+      return;
+    }
+    
+    setExporting(true);
+    try {
+      const token = getToken();
+      const response = await fetch(`http://localhost:5000/api/projects/${selectedExportProject}/export`, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        // 获取文件流
+        const blob = await response.blob();
+        // 从响应头获取文件名
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = '快测报告.xlsx';
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (match && match[1]) {
+            filename = match[1].replace(/['"]/g, '');
+          }
+        }
+        // 下载文件
+        saveAs(blob, filename);
+        alert('导出成功！');
+        setShowExportModal(false);
+        setSelectedExportProject('');
+      } else {
+        const error = await response.json();
+        alert(error.error || '导出失败');
+      }
+    } catch (error) {
+      console.error('导出失败:', error);
+      alert('导出失败，请稍后重试');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // 获取设备用途列表
   const fetchDeviceUsages = async () => {
@@ -367,12 +416,44 @@ function ProjectAssets() {
       <div className="page-header">
         <h1>项目资产管理</h1>
         <div className="header-buttons">
+          <button className="btn-secondary" onClick={() => setShowExportModal(true)}>
+            📊 导出快测报告
+          </button>
           <button className="btn-secondary" onClick={expandAll}>📂 展开全部</button>
           <button className="btn-secondary" onClick={collapseAll}>📁 收起全部</button>
           <button className="btn-secondary" onClick={() => setShowColumnConfig(!showColumnConfig)}>📋 列设置</button>
           <button className="btn-primary" onClick={openAddModal}>+ 新增资产</button>
         </div>
       </div>
+
+      {showExportModal && (
+        <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>导出快测报告</h2>
+            <div className="form-group">
+              <label>选择项目 *</label>
+              <select 
+                value={selectedExportProject} 
+                onChange={(e) => setSelectedExportProject(e.target.value)}
+                required
+              >
+                <option value="">请选择项目</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>
+                    {project.company_name} ({project.project_no})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="modal-actions">
+              <button className="btn-secondary" onClick={() => setShowExportModal(false)}>取消</button>
+              <button className="btn-primary" onClick={handleExportReport} disabled={exporting}>
+                {exporting ? '导出中...' : '确认导出'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showColumnConfig && (
         <div className="column-config-panel">
