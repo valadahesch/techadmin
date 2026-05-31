@@ -228,3 +228,152 @@ def init_project_management_routes(bp):
         ))
         
         return response
+    
+    @bp.route('/projects/<project_id>/export-indicators', methods=['GET'])
+    @api_permission_required()
+    def export_project_indicators(project_id):
+        """导出项目测评指标报告为Excel文件（模拟数据版本）"""
+        
+        # 创建Excel工作簿
+        wb = openpyxl.Workbook()
+        
+        # 删除默认的Sheet
+        wb.remove(wb.active)
+        
+        # 设置样式
+        header_font = Font(bold=True, size=12, color="FFFFFF")
+        header_fill = PatternFill(start_color="3b82f6", end_color="3b82f6", fill_type="solid")
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        thin_border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # ========== 1. 项目信息Sheet ==========
+        ws_info = wb.create_sheet("项目信息", 0)
+        
+        # 表头
+        info_headers = ['字段', '值']
+        for col, header in enumerate(info_headers, 1):
+            cell = ws_info.cell(row=1, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = thin_border
+        
+        # 模拟项目数据
+        info_data = [
+            ['项目编号', 'PJ-2024-001'],
+            ['单位名称', 'XX科技有限公司'],
+            ['联系人', '张三'],
+            ['联系方式', '138****1234'],
+            ['项目状态', '进行中'],
+            ['创建时间', datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+            ['备注', '测评指标报告（模拟数据）'],
+        ]
+        
+        for row_idx, row_data in enumerate(info_data, 2):
+            for col_idx, value in enumerate(row_data, 1):
+                cell = ws_info.cell(row=row_idx, column=col_idx, value=value)
+                cell.border = thin_border
+                if col_idx == 1:
+                    cell.font = Font(bold=True)
+        
+        ws_info.column_dimensions['A'].width = 20
+        ws_info.column_dimensions['B'].width = 40
+        
+        # ========== 2. 测评指标汇总Sheet ==========
+        ws_indicators = wb.create_sheet("测评指标汇总")
+        
+        # 表头
+        indicator_headers = ['指标编码', '指标名称', '指标类型', '可选值', '关联设备', '测评状态', '测评结果']
+        for col, header in enumerate(indicator_headers, 1):
+            cell = ws_indicators.cell(row=1, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = thin_border
+        
+        # 模拟测评指标数据
+        mock_indicators = [
+            ['PWD-001', '密码长度', '文本', '8-20位字符', '核心交换机,Web服务器', '已测评', '符合要求'],
+            ['PWD-002', '密码有效期', '文本', '90天', '核心交换机,Web服务器', '已测评', '符合要求'],
+            ['PWD-003', '密码复杂度', '文本', '大小写+数字+特殊字符', '核心交换机,Web服务器', '已测评', '部分符合'],
+            ['LOG-001', '登录失败次数限制', '文本', '5次', '防火墙,核心交换机', '已测评', '符合要求'],
+            ['LOG-002', '锁定时间', '文本', '30分钟', '防火墙,核心交换机', '已测评', '符合要求'],
+            ['LOG-003', '超时退出', '文本', '15分钟', '所有设备', '待测评', '-'],
+            ['SEC-001', 'IPS模块', '单选', '开启/关闭', '防火墙', '已测评', '已开启'],
+            ['SEC-002', 'AV模块', '单选', '开启/关闭', '防火墙', '已测评', '已开启'],
+            ['SEC-003', '日志审计功能', '单选', '开启/关闭', '日志审计系统', '已测评', '已开启'],
+            ['BACKUP-001', '数据备份策略', '文本', '每日增量+每周全量', '数据库服务器', '已测评', '符合要求'],
+            ['BACKUP-002', '异地备份', '单选', '开启/关闭', '数据库服务器', '待测评', '-'],
+        ]
+        
+        for row_idx, indicator in enumerate(mock_indicators, 2):
+            for col_idx, value in enumerate(indicator, 1):
+                cell = ws_indicators.cell(row=row_idx, column=col_idx, value=value)
+                cell.border = thin_border
+                cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+        
+        # 调整列宽
+        indicator_widths = [15, 20, 12, 25, 30, 12, 15]
+        for i, width in enumerate(indicator_widths, 1):
+            ws_indicators.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+        
+        # ========== 3. 设备测评指标明细Sheet ==========
+        ws_details = wb.create_sheet("设备测评指标明细")
+        
+        # 表头
+        detail_headers = ['设备名称', '设备类型', '主机地址', '关联测评类型', '测评指标', '指标值', '测评结论', '备注']
+        for col, header in enumerate(detail_headers, 1):
+            cell = ws_details.cell(row=1, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_alignment
+            cell.border = thin_border
+        
+        # 模拟设备测评指标明细数据
+        mock_details = [
+            ['核心交换机', '网络设备', '10.0.0.1', '网络安全测评', '密码长度', '12位', '符合', ''],
+            ['核心交换机', '网络设备', '10.0.0.1', '网络安全测评', '密码有效期', '90天', '符合', ''],
+            ['核心交换机', '网络设备', '10.0.0.1', '网络安全测评', '登录失败限制', '5次', '符合', ''],
+            ['防火墙', '安全设备', '10.0.0.2', '边界安全测评', 'IPS模块', '开启', '符合', ''],
+            ['防火墙', '安全设备', '10.0.0.2', '边界安全测评', 'AV模块', '开启', '符合', ''],
+            ['防火墙', '安全设备', '10.0.0.2', '边界安全测评', '密码长度', '12位', '符合', ''],
+            ['Web服务器', '服务器', '10.0.1.10', '应用安全测评', '密码复杂度', '数字+字母', '部分符合', '建议增加特殊字符'],
+            ['Web服务器', '服务器', '10.0.1.10', '应用安全测评', '超时退出', '20分钟', '不符合', '建议缩短至15分钟'],
+            ['数据库服务器', '服务器', '10.0.1.20', '数据安全测评', '数据备份策略', '每日增量+每周全量', '符合', ''],
+            ['日志审计系统', '安全设备', '10.0.0.5', '日志审计测评', '日志审计功能', '开启', '符合', ''],
+        ]
+        
+        for row_idx, detail in enumerate(mock_details, 2):
+            for col_idx, value in enumerate(detail, 1):
+                cell = ws_details.cell(row=row_idx, column=col_idx, value=value)
+                cell.border = thin_border
+                cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+        
+        # 调整列宽
+        detail_widths = [18, 12, 15, 18, 20, 15, 12, 20]
+        for i, width in enumerate(detail_widths, 1):
+            ws_details.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+        
+        # 保存到BytesIO
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        # 生成文件名
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"测评指标报告_{timestamp}.xlsx"
+        
+        # 返回文件
+        response = make_response(send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ))
+        
+        return response

@@ -18,6 +18,53 @@ function ProjectAssets() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [selectedExportProject, setSelectedExportProject] = useState('');
+  const [showExportIndicatorModal, setShowExportIndicatorModal] = useState(false);
+  const [exportingIndicator, setExportingIndicator] = useState(false);
+  const [selectedExportIndicatorProject, setSelectedExportIndicatorProject] = useState('');
+
+  // 添加导出测评指标处理函数
+  const handleExportIndicator = async () => {
+    if (!selectedExportIndicatorProject) {
+      alert('请选择要导出的项目');
+      return;
+    }
+    
+    setExportingIndicator(true);
+    try {
+      const token = getToken();
+      const response = await fetch(`http://localhost:5000/api/projects/${selectedExportIndicatorProject}/export-indicators`, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = '测评指标报告.xlsx';
+        if (contentDisposition) {
+          const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          if (match && match[1]) {
+            filename = match[1].replace(/['"]/g, '');
+          }
+        }
+        saveAs(blob, filename);
+        alert('导出成功！');
+        setShowExportIndicatorModal(false);
+        setSelectedExportIndicatorProject('');
+      } else {
+        const error = await response.json();
+        alert(error.error || '导出失败');
+      }
+    } catch (error) {
+      console.error('导出失败:', error);
+      alert('导出失败，请稍后重试');
+    } finally {
+      setExportingIndicator(false);
+    }
+  };
 
   const handleExportReport = async () => {
     if (!selectedExportProject) {
@@ -416,6 +463,9 @@ function ProjectAssets() {
       <div className="page-header">
         <h1>项目资产管理</h1>
         <div className="header-buttons">
+          <button className="btn-secondary" onClick={() => setShowExportIndicatorModal(true)}>
+            📈 导出测评指标
+          </button>
           <button className="btn-secondary" onClick={() => setShowExportModal(true)}>
             📊 导出快测报告
           </button>
@@ -426,6 +476,35 @@ function ProjectAssets() {
         </div>
       </div>
 
+      {showExportIndicatorModal && (
+        <div className="modal-overlay" onClick={() => setShowExportIndicatorModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>导出测评指标</h2>
+            <div className="form-group">
+              <label>选择项目 *</label>
+              <select 
+                value={selectedExportIndicatorProject} 
+                onChange={(e) => setSelectedExportIndicatorProject(e.target.value)}
+                required
+              >
+                <option value="">请选择项目</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>
+                    {project.company_name} ({project.project_no})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="modal-actions">
+              <button className="btn-secondary" onClick={() => setShowExportIndicatorModal(false)}>取消</button>
+              <button className="btn-primary" onClick={handleExportIndicator} disabled={exportingIndicator}>
+                {exportingIndicator ? '导出中...' : '确认导出'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {showExportModal && (
         <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
