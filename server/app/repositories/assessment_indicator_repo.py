@@ -150,5 +150,22 @@ class AssessmentIndicatorRepository:
         db.session.commit()
         return True
 
+    def get_by_name_cn(self, name_cn):
+        """根据中文名称获取测评指标"""
+        result = self.model.query.filter_by(name_cn=name_cn).first()
+        if not result:
+            return None
+        return result.to_dict()
+
+    # server/app/repositories/assessment_indicator_repo.py
+    # 添加以下方法
+
+    def get_by_name_en(self, name_en):
+        """根据英文名称获取测评指标"""
+        result = self.model.query.filter_by(name_en=name_en).first()
+        if not result:
+            return None
+        return result.to_dict()
+
 # 创建单例
 assessment_indicator_repo = AssessmentIndicatorRepository()

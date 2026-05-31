@@ -638,3 +638,173 @@
     padding: 8px 12px;
   }
 }
+
+/* 测评记录弹窗样式 */
+.record-modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 750px;
+  max-width: 90%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.record-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.record-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #1e293b;
+}
+
+.record-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.record-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* 加载和空状态 */
+.record-loading,
+.record-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.record-empty .empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.record-empty .empty-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 8px;
+}
+
+/* 测评指标字段区域 */
+.record-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.record-field-group {
+  margin-bottom: 20px;
+}
+
+.record-field-group:last-child {
+  margin-bottom: 0;
+}
+
+.record-field-label {
+  display: block;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.field-type-badge {
+  display: inline-block;
+  background: #e2e8f0;
+  color: #64748b;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+.record-input,
+.record-select,
+.record-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.record-input:focus,
+.record-select:focus,
+.record-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.record-textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* 信息卡片 */
+.info-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.info-card-header {
+  padding: 12px 16px;
+  background: #f8fafc;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.info-card-body {
+  padding: 16px;
+}
+
+.info-row {
+  display: flex;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+.info-label {
+  width: 90px;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.info-value {
+  flex: 1;
+  color: #1e293b;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #94a3b8;
+}
+
+.close-btn:hover {
+  color: #ef4444;
+}
